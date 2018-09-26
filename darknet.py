@@ -375,8 +375,9 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
     fi = 0
     
     #VideoCapture를 0으로 열면 기본 웹캠, 1로 열면 두번째 캠, 파일 이름으로 열면 비디오
-    cap = cv2.VideoCapture(0)
+    #cap = cv2.VideoCapture(0)
     #cap = cv2.VideoCapture('test.mp4')
+    cap = cv2.VideoCapture('http://192.168.1.55:8080')
     while True:
         ret, frame = cap.read()
         #if not ret : break

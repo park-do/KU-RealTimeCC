@@ -29,6 +29,7 @@ Windows Python 2.7 version: https://github.com/AlexeyAB/darknet/blob/fc496d52bf2
 """
 #pylint: disable=R, W0401, W0614, W0703
 from ctypes import *
+from time import sleep
 import math
 import random
 import os
@@ -218,6 +219,7 @@ def classify(net, meta, im):
     res = sorted(res, key=lambda x: -x[1])
     return res
 
+
 def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
     """
     Performs the meat of the detection
@@ -377,26 +379,27 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
     #VideoCapture를 0으로 열면 기본 웹캠, 1로 열면 두번째 캠, 파일 이름으로 열면 비디오
     #cap = cv2.VideoCapture(0)
     #cap = cv2.VideoCapture('test.mp4')
-    cap = cv2.VideoCapture('http://192.168.1.55:8080')
+    cap = cv2.VideoCapture('http://172.16.36.36:8080')
+
     while True:
         ret, frame = cap.read()
-        #if not ret : break
-        print (fi)
-        fi+=1
-        #cv2.imshow("preview",frame)
-        detections = detect(netMain, metaMain, frame, thresh)	# if is used cv2.imread(image)
-        showImage = False #이 Line을 주석 처리하면 프리뷰가 나옵니다.
+        # if not ret : break
+        print(fi)
+        fi += 1
+        # cv2.imshow("preview",frame)
+        detections = detect(netMain, metaMain, frame, thresh)  # if is used cv2.imread(image)
+        #showImage = False  # 이 Line을 주석 처리하면 프리뷰가 나옵니다.
         if showImage:
             try:
                 from skimage import io, draw
                 import numpy as np
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                print("*** "+str(len(detections))+" Results, color coded by confidence ***")
+                print("*** " + str(len(detections)) + " Results, color coded by confidence ***")
                 imcaption = []
                 for detection in detections:
                     label = detection[0]
                     confidence = detection[1]
-                    pstring = label+": "+str(np.rint(100 * confidence))+"%"
+                    pstring = label + ": " + str(np.rint(100 * confidence)) + "%"
                     imcaption.append(pstring)
                     print(pstring)
                     bounds = detection[2]
@@ -408,8 +411,8 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
                     yExtent = int(bounds[3])
                     xEntent = int(bounds[2])
                     # Coordinates are around the center
-                    xCoord = int(bounds[0] - bounds[2]/2)
-                    yCoord = int(bounds[1] - bounds[3]/2)
+                    xCoord = int(bounds[0] - bounds[2] / 2)
+                    yCoord = int(bounds[1] - bounds[3] / 2)
                     boundingBox = [
                         [xCoord, yCoord],
                         [xCoord, yCoord + yExtent],
@@ -417,17 +420,22 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
                         [xCoord + xEntent, yCoord]
                     ]
                     # Wiggle it around to make a 3px border
-                    rr, cc = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] for x in boundingBox], shape= shape)
-                    rr2, cc2 = draw.polygon_perimeter([x[1] + 1 for x in boundingBox], [x[0] for x in boundingBox], shape= shape)
-                    rr3, cc3 = draw.polygon_perimeter([x[1] - 1 for x in boundingBox], [x[0] for x in boundingBox], shape= shape)
-                    rr4, cc4 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] + 1 for x in boundingBox], shape= shape)
-                    rr5, cc5 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] - 1 for x in boundingBox], shape= shape)
+                    rr, cc = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] for x in boundingBox],
+                                                    shape=shape)
+                    rr2, cc2 = draw.polygon_perimeter([x[1] + 1 for x in boundingBox], [x[0] for x in boundingBox],
+                                                      shape=shape)
+                    rr3, cc3 = draw.polygon_perimeter([x[1] - 1 for x in boundingBox], [x[0] for x in boundingBox],
+                                                      shape=shape)
+                    rr4, cc4 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] + 1 for x in boundingBox],
+                                                      shape=shape)
+                    rr5, cc5 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] - 1 for x in boundingBox],
+                                                      shape=shape)
                     boxColor = (int(255 * (1 - (confidence ** 2))), int(255 * (confidence ** 2)), 0)
-                    draw.set_color(image, (rr, cc), boxColor, alpha= 0.8)
-                    draw.set_color(image, (rr2, cc2), boxColor, alpha= 0.8)
-                    draw.set_color(image, (rr3, cc3), boxColor, alpha= 0.8)
-                    draw.set_color(image, (rr4, cc4), boxColor, alpha= 0.8)
-                    draw.set_color(image, (rr5, cc5), boxColor, alpha= 0.8)
+                    draw.set_color(image, (rr, cc), boxColor, alpha=0.8)
+                    draw.set_color(image, (rr2, cc2), boxColor, alpha=0.8)
+                    draw.set_color(image, (rr3, cc3), boxColor, alpha=0.8)
+                    draw.set_color(image, (rr4, cc4), boxColor, alpha=0.8)
+                    draw.set_color(image, (rr5, cc5), boxColor, alpha=0.8)
                 if not makeImageOnly:
                     io.imshow(image)
                     io.show()
@@ -437,12 +445,68 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
                     "caption": "\n<br/>".join(imcaption)
                 }
             except Exception as e:
-                print("Unable to show image: "+str(e))
-        #detections = detect(netMain, metaMain, imagePath.encode("utf-8"), thresh)
-    
-    
-    
+                print("Unable to show image: " + str(e))
+
     return detections
 
+
+# 외부에서 Darknet Detect사용
+class DarknetDetect:
+    # 미리 필요한 weight, config등의 파일들을 불러와서 클래스에 저장
+    def __init__(self):
+        self.thresh = 0.25
+        configPath = "./cfg/yolov3.cfg"
+        weightPath = "yolov3.weights"
+        metaPath = "./data/coco.data"
+
+        # assert 0 < thresh < 1, "Threshold should be a float between zero and one (non-inclusive)"
+        if not os.path.exists(configPath):
+            raise ValueError("Invalid config path `" + os.path.abspath(configPath) + "`")
+        if not os.path.exists(weightPath):
+            raise ValueError("Invalid weight path `" + os.path.abspath(weightPath) + "`")
+        if not os.path.exists(metaPath):
+            raise ValueError("Invalid data file path `" + os.path.abspath(metaPath) + "`")
+        self.netMain = load_net_custom(configPath.encode("utf-8"), weightPath.encode("utf-8"), 0, 1)  # batch size = 1
+        self.metaMain = load_meta(metaPath.encode("utf-8"))
+
+        global altNames
+        if altNames is None:
+            # In Python 3, the metafile default access craps out on Windows (but not Linux)
+            # Read the names file and create a list to feed to detect
+            try:
+                with open(metaPath) as metaFH:
+                    metaContents = metaFH.read()
+                    import re
+                    match = re.search("names *= *(.*)$", metaContents, re.IGNORECASE | re.MULTILINE)
+                    if match:
+                        result = match.group(1)
+                    else:
+                        result = None
+                    try:
+                        if os.path.exists(result):
+                            with open(result) as namesFH:
+                                namesList = namesFH.read().strip().split("\n")
+                                altNames = [x.strip() for x in namesList]
+                    except TypeError:
+                        pass
+            except Exception:
+                pass
+
+    # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
+    def framedetect(self, camip):
+        import cv2
+        cap = cv2.VideoCapture(camip)
+
+        ret, frame = cap.read()
+        detections = detect(self.netMain, self.metaMain, frame, self.thresh)
+
+        return detections
+
+
 if __name__ == "__main__":
-    print(performDetect())
+    # 사용예
+    d = DarknetDetect()
+    camip = 'http://172.16.36.36:8080'
+    print(d.framedetect(camip))
+    print(d.framedetect(camip))
+

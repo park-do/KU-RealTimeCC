@@ -255,10 +255,14 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
     if debug: print("did sort")
     res = []
     if debug: print("about to range")
+    numberofpeople = 0
     for j in range(num):
         if debug: print("Ranging on "+str(j)+" of "+str(num))
         if debug: print("Classes: "+str(meta), meta.classes, meta.names)
         for i in range(meta.classes):
+            if i == 0:
+                if dets[j].prob[i] > 0.25:
+                    numberofpeople = numberofpeople + 1 # class가 0일때 사람의 수를 센다.
             if debug: print("Class-ranging on "+str(i)+" of "+str(meta.classes)+"= "+str(dets[j].prob[i]))
             if dets[j].prob[i] > 0:
                 b = dets[j].bbox
@@ -272,6 +276,7 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
                     print(dets[j].prob[i])
                     print((b.x, b.y, b.w, b.h))
                 res.append((nameTag, dets[j].prob[i], (b.x, b.y, b.w, b.h)))
+    print("the number of people is: " + numberofpeople.__str__())
     if debug: print("did range")
     res = sorted(res, key=lambda x: -x[1])
     if debug: print("did sort")
@@ -377,8 +382,9 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
     fi = 0
     
     #VideoCapture를 0으로 열면 기본 웹캠, 1로 열면 두번째 캠, 파일 이름으로 열면 비디오
-    #cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
     #cap = cv2.VideoCapture('test.mp4')
+
     cap = cv2.VideoCapture('http://172.16.36.36:8080')
 
     while True:

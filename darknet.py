@@ -512,7 +512,8 @@ class DarknetDetect:
 if __name__ == "__main__":
     # 사용예
     d = DarknetDetect()
-    camip = 'http://172.16.36.36:8080'
+    #camip = 'http://172.16.36.36:8080'
+    camip = 0
     print(d.framedetect(camip))
     print(d.framedetect(camip))
 

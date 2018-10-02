@@ -12,8 +12,8 @@ if __name__ == "__main__":
     # analyzer init
     a = analyzer.Analyzer()
 
-    g = gui.FrameOne(None, 'test', d)
-    g.openWindow()
+    # 첫번째 프레임을 실행시키고 다크넷을 넘겨준다
+    g = gui.FrameOne(None, d)
 
     '''
     for i in range(0,5):

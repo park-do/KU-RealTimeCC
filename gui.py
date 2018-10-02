@@ -1,45 +1,42 @@
 import wx
+from threading import Thread
 
+def bitmapthread(imageCtrl,detector,camip):
+    while True:
+        _, bitmap = detector.framedetect(camip=camip)
+        imageCtrl.Bitmap = bitmap
 
-class MyPanel(wx.Panel):
+class FrameOne(wx.Frame):
+    """분석 시작 버튼이 있는 프레임"""
 
-    def __init__(self, parent):
-        super(MyPanel, self).__init__(parent)
+    def __init__(self, parent, d):
+        """생성자"""
+        self.d = d  # 다크넷 객체 받음
+        title = "프레임1"
 
-        b = wx.Button(self, label='Btn', pos=(100, 100))
-        b.Bind(wx.EVT_BUTTON, self.btnclk)
-        self.Bind(wx.EVT_BUTTON, self.OnButtonClicked)
-
-    def OnButtonClicked(self, e):
-        print('Panel received click event. propagated to Frame class')
-        e.Skip()
-
-    def btnclk(self, e):
-        print("Button received click event. propagated to Panel class")
-        e.Skip()
-
-
-class Example(wx.Frame):
-
-    def __init__(self, parent):
-        super(Example, self).__init__(parent)
-
-        self.InitUI()
-
-    def InitUI(self):
-        mpnl = MyPanel(self)
-        self.Bind(wx.EVT_BUTTON, self.OnButtonClicked)
-
-        self.SetTitle('Event propagation demo')
-        self.Centre()
+        app = wx.App(False)  # wx 초기화
+        wx.Frame.__init__(self, parent, title=title, size=(500, 500))  # 사이즈에 -1 넣으면 기본값 나옴
+        panel = wx.Panel(self)
+        button = wx.Button(panel, label="수집시작", pos=(400, 400), size=(60, 60))
+        self.Bind(wx.EVT_BUTTON, self.onButton, button)
         self.Show(True)
+        app.MainLoop()  # gui 실행
 
-    def OnButtonClicked(self, e):
-        print('click event received by frame class')
-        e.Skip()
+    def onButton(self, e):
+        # wx.BitmapFromImage(self.detector.getcamimage(1))
 
+        """
+        이 부분을 웹캠을 넣어서 실행할 수 있으면 좋겠습니다
+        #camip = 'http://192.168.0.11:8080'
+        camip = 0
+        _, bitmap = self.d.framedetect(camip=camip)
+        self.imageCtrl = wx.StaticBitmap(self, wx.ID_ANY, bitmap,
+                                         pos=(10, 40))
 
-def openWindow():
-    ex = wx.App()
-    Example(None)
-    ex.MainLoop()
+        t = Thread(target=bitmapthread, args=(self.imageCtrl, self.detector, camip))
+        t.start()
+
+        wx.MessageDialog(self, "종료", "종료합니다")
+        """
+        self.d.framedetect(0)
+        self.Close(True) #종료

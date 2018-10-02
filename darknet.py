@@ -514,13 +514,17 @@ class DarknetDetect:
 
         cap = cv2.VideoCapture(camip)
         ret, frame = cap.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        source_img = Image.fromarray(frame)
+            source_img = Image.fromarray(frame)
 
-        width, height = source_img.size
+            width, height = source_img.size
 
-        return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
+            return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
+
+        print("Failed To Load IMAGE! in getcamimage")
+        return wx.Bitmap.Create(200, 200, depth=wx.BITMAP_SCREEN_DEPTH)
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, newcap=True):
@@ -532,38 +536,39 @@ class DarknetDetect:
         '''
         cap = cv2.VideoCapture(camip)
         ret, frame = cap.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        detections = detect(self.netMain, self.metaMain, frame, self.thresh)
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
-        if drawboxes:
-            from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+            if drawboxes:
+                from PIL import Image, ImageFont, ImageDraw, ImageEnhance
 
-            source_img = Image.fromarray(frame)
+                source_img = Image.fromarray(frame)
 
-            draw = ImageDraw.Draw(source_img)
+                draw = ImageDraw.Draw(source_img)
 
-            for detection in detections:
-                if detection[0] == "person":
-                    bounds = detection[2]
-                    # Left Top X,Y
-                    ltx = bounds[0]-bounds[2]/2
-                    lty = bounds[1]-bounds[3]/2
+                for detection in detections:
+                    if detection[0] == "person":
+                        bounds = detection[2]
+                        # Left Top X,Y
+                        ltx = bounds[0]-bounds[2]/2
+                        lty = bounds[1]-bounds[3]/2
 
-                    # Right Bottom X,Y
-                    rbx = bounds[0] + bounds[2] / 2
-                    rby = bounds[1] + bounds[3] / 2
+                        # Right Bottom X,Y
+                        rbx = bounds[0] + bounds[2] / 2
+                        rby = bounds[1] + bounds[3] / 2
 
-                    draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
-            if saveimage:
-                source_img.save("../haha.png", "PNG")
+                        draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
+                if saveimage:
+                    source_img.save("../haha.png", "PNG")
 
-        resultimage = source_img
-        if converttowximage:
-            import wx
-            width, height = resultimage.size
-            resultimage = wx.Bitmap.FromBuffer(width, height, resultimage.convert("RGB").tobytes())
-        return detections, resultimage
-
+            resultimage = source_img
+            if converttowximage:
+                import wx
+                width, height = resultimage.size
+                resultimage = wx.Bitmap.FromBuffer(width, height, resultimage.convert("RGB").tobytes())
+            return detections, resultimage
+        print("Failed To Load IMAGE! in framedetect")
 
 if __name__ == "__main__":
     # 사용예

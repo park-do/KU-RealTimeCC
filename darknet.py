@@ -505,11 +505,15 @@ class DarknetDetect:
         import cv2
         from PIL import Image
         import wx
+
+        '''
         if self.camip!=camip or newcap:
             self.camip = camip
             self.cap = cv2.VideoCapture(camip)
+        '''
 
-        ret, frame = self.cap.read()
+        cap = cv2.VideoCapture(camip)
+        ret, frame = cap.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         source_img = Image.fromarray(frame)
@@ -521,11 +525,13 @@ class DarknetDetect:
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, newcap=True):
         import cv2
+        '''
         if self.camip!=camip or newcap:
             self.camip = camip
             self.cap = cv2.VideoCapture(camip)
-
-        ret, frame = self.cap.read()
+        '''
+        cap = cv2.VideoCapture(camip)
+        ret, frame = cap.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
@@ -548,8 +554,8 @@ class DarknetDetect:
                     rby = bounds[1] + bounds[3] / 2
 
                     draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
-
-            source_img.save("../haha.png", "PNG")
+            if saveimage:
+                source_img.save("../haha.png", "PNG")
 
         resultimage = source_img
         if converttowximage:

@@ -455,12 +455,13 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
 
     return detections
 
-
 # 외부에서 Darknet Detect사용
 class DarknetDetect:
     # 미리 필요한 weight, config등의 파일들을 불러와서 클래스에 저장
     def __init__(self):
         self.thresh = 0.25
+        self.camip = -1
+
         configPath = "./cfg/yolov3.cfg"
         weightPath = "yolov3.weights"
         metaPath = "./data/coco.data"
@@ -498,22 +499,70 @@ class DarknetDetect:
             except Exception:
                 pass
 
-    # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
-    def framedetect(self, camip):
-        import cv2
-        cap = cv2.VideoCapture(camip)
 
-        ret, frame = cap.read()
+    # 단순하게 캠의 프레임만 읽어서 리턴
+    def getcamimage(self, camip, newcap=True):
+        import cv2
+        from PIL import Image
+        import wx
+        if self.camip!=camip or newcap:
+            self.camip = camip
+            self.cap = cv2.VideoCapture(camip)
+
+        ret, frame = self.cap.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        source_img = Image.fromarray(frame)
+
+        width, height = source_img.size
+
+        return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
+
+    # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
+    def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, newcap=True):
+        import cv2
+        if self.camip!=camip or newcap:
+            self.camip = camip
+            self.cap = cv2.VideoCapture(camip)
+
+        ret, frame = self.cap.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
-        return detections
+        if drawboxes:
+            from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+
+            source_img = Image.fromarray(frame)
+
+            draw = ImageDraw.Draw(source_img)
+
+            for detection in detections:
+                if detection[0] == "person":
+                    bounds = detection[2]
+                    # Left Top X,Y
+                    ltx = bounds[0]-bounds[2]/2
+                    lty = bounds[1]-bounds[3]/2
+
+                    # Right Bottom X,Y
+                    rbx = bounds[0] + bounds[2] / 2
+                    rby = bounds[1] + bounds[3] / 2
+
+                    draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
+
+            source_img.save("../haha.png", "PNG")
+
+        resultimage = source_img
+        if converttowximage:
+            import wx
+            width, height = resultimage.size
+            resultimage = wx.Bitmap.FromBuffer(width, height, resultimage.convert("RGB").tobytes())
+        return detections, resultimage
 
 
 if __name__ == "__main__":
     # 사용예
     d = DarknetDetect()
-    #camip = 'http://172.16.36.36:8080'
-    camip = 0
-    print(d.framedetect(camip))
-    print(d.framedetect(camip))
+    camip = 'http://192.168.0.11:8080'
+    # camip = 1
+    d.framedetect(camip=camip, drawboxes=True, saveimage=True)
 

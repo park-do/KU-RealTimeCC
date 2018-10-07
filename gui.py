@@ -25,7 +25,7 @@ class FrameOne(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onButton, button)
 
         # testing cam ip
-        self.camip = 'http://192.168.1.55:8080'
+        self.camip = 'http://192.168.1.165:8080'
         # Image Control에 처음으로 넣을 프레임을 가져옵니다.
         bitmap = self.d.getcamimage(camip=self.camip)
         # get com image에서 찾아온 첫 프레임을 미리 넣어둡니다.

@@ -503,7 +503,7 @@ class DarknetDetect:
         if self.cap is None:
             self.cap = cv2.VideoCapture(camip)
 
-    # 캠의 좌우 크기 리턴
+    # 캠의 가로세로 크기 리턴
     def getcamsize(self, camip):
         self.initcam(camip)
         return [self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)]

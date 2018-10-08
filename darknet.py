@@ -33,6 +33,7 @@ from time import sleep
 import math
 import random
 import os
+import cv2
 
 def sample(probs):
     s = sum(probs)
@@ -226,7 +227,6 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
     """
     #pylint: disable= C0321
     #im = load_image(image, 0, 0)
-    import cv2
     #custom_image_bgr = cv2.imread(image) # use: detect(,,imagePath,)
     #custom_image_bgr = image
     #custom_image = cv2.cvtColor(custom_image_bgr, cv2.COLOR_BGR2RGB)
@@ -378,7 +378,6 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
     if not os.path.exists(imagePath):
         raise ValueError("Invalid image path `"+os.path.abspath(imagePath)+"`")
     # Do the detection
-    import cv2
     fi = 0
     
     #VideoCapture를 0으로 열면 기본 웹캠, 1로 열면 두번째 캠, 파일 이름으로 열면 비디오
@@ -500,10 +499,17 @@ class DarknetDetect:
             except Exception:
                 pass
 
+    def initcam(self, camip):
+        if self.cap is None:
+            self.cap = cv2.VideoCapture(camip)
+
+    # 캠의 좌우 크기 리턴
+    def getcamsize(self, camip):
+        self.initcam(camip)
+        return [self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)]
 
     # 단순하게 캠의 현재 프레임만 읽어서 리턴
     def getcamimage(self, camip, converttowxbitmap=True, size=(0, 0), newcap=True):
-        import cv2
         from PIL import Image
         import wx
 
@@ -513,8 +519,7 @@ class DarknetDetect:
             self.cap = cv2.VideoCapture(camip)
         '''
 
-        if self.cap is None:
-            self.cap = cv2.VideoCapture(camip)
+        self.initcam(camip)
 
         ret, frame = self.cap.read()
         if not ret:
@@ -534,7 +539,6 @@ class DarknetDetect:
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
-        import cv2
         '''
         if self.camip!=camip or newcap:
             self.camip = camip

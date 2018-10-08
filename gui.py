@@ -25,8 +25,6 @@ class FrameOne(wx.Frame):
         button = wx.Button(self.startPanel, label="수집시작", pos=(500, 300), size=(60, 60))
         self.Bind(wx.EVT_BUTTON, self.onButton, button)
         self.imageCtrl = None
-
-
         self.Show(True)
         app.MainLoop()  # gui 실행
 
@@ -58,10 +56,17 @@ class FrameOne(wx.Frame):
         print(self.camip)
         # Image Control에 처음으로 넣을 프레임을 가져옵니다.
         if self.imageCtrl is None:
+            self.secondPanel = wx.Panel(self)
+            self.secondPanel.SetSize([600, 600])
+            self.startPanel.Hide()
+            self.secondPanel.Show()
+            self.Layout()
+
             bitmap = self.d.getcamimage(camip=self.camip, size = camsize)
             # 처음으로 불러온것이면 get com image에서 찾아온 첫 프레임을 넣어둡니다.
-            self.imageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap,
+            self.imageCtrl = wx.StaticBitmap(self.secondPanel, wx.ID_ANY, bitmap,
                                          pos=(10, 10))
+
 
         '''
         # 여기는 버튼을 누를 때 갱신됩니다. 

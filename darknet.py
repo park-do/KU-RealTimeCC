@@ -225,18 +225,8 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
     """
     Performs the meat of the detection
     """
-    #pylint: disable= C0321
-    #im = load_image(image, 0, 0)
-    #custom_image_bgr = cv2.imread(image) # use: detect(,,imagePath,)
-    #custom_image_bgr = image
-    #custom_image = cv2.cvtColor(custom_image_bgr, cv2.COLOR_BGR2RGB)
-    #custom_image = cv2.resize(custom_image,(lib.network_width(net), lib.network_height(net)), interpolation = cv2.INTER_LINEAR)
-    #import scipy.misc
-    #custom_image = scipy.misc.imread(image)
     im, arr = array_to_image(image)		# you should comment line below: free_image(im)
-    #im = image
     custom_image_bgr = image
-    #im = image
     if debug: print("Loaded image")
     num = c_int(0)
     if debug: print("Assigned num")
@@ -246,7 +236,7 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
     if debug: print("did prediction")
     
     dets = get_network_boxes(net, custom_image_bgr.shape[1], custom_image_bgr.shape[0], thresh, hier_thresh, None, 0, pnum, 0) # OpenCV
-    #dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum, 0)
+    # dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum, 0)
     if debug: print("Got dets")
     num = pnum[0]
     if debug: print("got zeroth index of pnum")
@@ -290,169 +280,6 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
 netMain = None
 metaMain = None
 altNames = None
-
-def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "yolov3.weights", metaPath= "./data/coco.data", showImage= True, makeImageOnly = False, initOnly= False):
-    """
-    Convenience function to handle the detection and returns of objects.
-
-    Displaying bounding boxes requires libraries scikit-image and numpy
-
-    Parameters
-    ----------------
-    imagePath: str
-        Path to the image to evaluate. Raises ValueError if not found
-
-    thresh: float (default= 0.25)
-        The detection threshold
-
-    configPath: str
-        Path to the configuration file. Raises ValueError if not found
-
-    weightPath: str
-        Path to the weights file. Raises ValueError if not found
-
-    metaPath: str
-        Path to the data file. Raises ValueError if not found
-
-    showImage: bool (default= True)
-        Compute (and show) bounding boxes. Changes return.
-
-    makeImageOnly: bool (default= False)
-        If showImage is True, this won't actually *show* the image, but will create the array and return it.
-
-    initOnly: bool (default= False)
-        Only initialize globals. Don't actually run a prediction.
-
-    Returns
-    ----------------------
-
-
-    When showImage is False, list of tuples like
-        ('obj_label', confidence, (bounding_box_x_px, bounding_box_y_px, bounding_box_width_px, bounding_box_height_px))
-        The X and Y coordinates are from the center of the bounding box. Subtract half the width or height to get the lower corner.
-
-    Otherwise, a dict with
-        {
-            "detections": as above
-            "image": a numpy array representing an image, compatible with scikit-image
-            "caption": an image caption
-        }
-    """
-    # Import the global variables. This lets us instance Darknet once, then just call performDetect() again without instancing again
-    global metaMain, netMain, altNames #pylint: disable=W0603
-    assert 0 < thresh < 1, "Threshold should be a float between zero and one (non-inclusive)"
-    if not os.path.exists(configPath):
-        raise ValueError("Invalid config path `"+os.path.abspath(configPath)+"`")
-    if not os.path.exists(weightPath):
-        raise ValueError("Invalid weight path `"+os.path.abspath(weightPath)+"`")
-    if not os.path.exists(metaPath):
-        raise ValueError("Invalid data file path `"+os.path.abspath(metaPath)+"`")
-    if netMain is None:
-        netMain = load_net_custom(configPath.encode("utf-8"), weightPath.encode("utf-8"), 0, 1)  # batch size = 1
-    if metaMain is None:
-        metaMain = load_meta(metaPath.encode("utf-8"))
-    if altNames is None:
-        # In Python 3, the metafile default access craps out on Windows (but not Linux)
-        # Read the names file and create a list to feed to detect
-        try:
-            with open(metaPath) as metaFH:
-                metaContents = metaFH.read()
-                import re
-                match = re.search("names *= *(.*)$", metaContents, re.IGNORECASE | re.MULTILINE)
-                if match:
-                    result = match.group(1)
-                else:
-                    result = None
-                try:
-                    if os.path.exists(result):
-                        with open(result) as namesFH:
-                            namesList = namesFH.read().strip().split("\n")
-                            altNames = [x.strip() for x in namesList]
-                except TypeError:
-                    pass
-        except Exception:
-            pass
-    if initOnly:
-        print("Initialized detector")
-        return None
-    if not os.path.exists(imagePath):
-        raise ValueError("Invalid image path `"+os.path.abspath(imagePath)+"`")
-    # Do the detection
-    fi = 0
-    
-    #VideoCapture를 0으로 열면 기본 웹캠, 1로 열면 두번째 캠, 파일 이름으로 열면 비디오
-    cap = cv2.VideoCapture(0)
-    #cap = cv2.VideoCapture('test.mp4')
-
-    cap = cv2.VideoCapture('http://172.16.36.36:8080')
-
-    while True:
-        ret, frame = cap.read()
-        # if not ret : break
-        print(fi)
-        fi += 1
-        # cv2.imshow("preview",frame)
-        detections = detect(netMain, metaMain, frame, thresh)  # if is used cv2.imread(image)
-        #showImage = False  # 이 Line을 주석 처리하면 프리뷰가 나옵니다.
-        if showImage:
-            try:
-                from skimage import io, draw
-                import numpy as np
-                image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                print("*** " + str(len(detections)) + " Results, color coded by confidence ***")
-                imcaption = []
-                for detection in detections:
-                    label = detection[0]
-                    confidence = detection[1]
-                    pstring = label + ": " + str(np.rint(100 * confidence)) + "%"
-                    imcaption.append(pstring)
-                    print(pstring)
-                    bounds = detection[2]
-                    shape = image.shape
-                    # x = shape[1]
-                    # xExtent = int(x * bounds[2] / 100)
-                    # y = shape[0]
-                    # yExtent = int(y * bounds[3] / 100)
-                    yExtent = int(bounds[3])
-                    xEntent = int(bounds[2])
-                    # Coordinates are around the center
-                    xCoord = int(bounds[0] - bounds[2] / 2)
-                    yCoord = int(bounds[1] - bounds[3] / 2)
-                    boundingBox = [
-                        [xCoord, yCoord],
-                        [xCoord, yCoord + yExtent],
-                        [xCoord + xEntent, yCoord + yExtent],
-                        [xCoord + xEntent, yCoord]
-                    ]
-                    # Wiggle it around to make a 3px border
-                    rr, cc = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] for x in boundingBox],
-                                                    shape=shape)
-                    rr2, cc2 = draw.polygon_perimeter([x[1] + 1 for x in boundingBox], [x[0] for x in boundingBox],
-                                                      shape=shape)
-                    rr3, cc3 = draw.polygon_perimeter([x[1] - 1 for x in boundingBox], [x[0] for x in boundingBox],
-                                                      shape=shape)
-                    rr4, cc4 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] + 1 for x in boundingBox],
-                                                      shape=shape)
-                    rr5, cc5 = draw.polygon_perimeter([x[1] for x in boundingBox], [x[0] - 1 for x in boundingBox],
-                                                      shape=shape)
-                    boxColor = (int(255 * (1 - (confidence ** 2))), int(255 * (confidence ** 2)), 0)
-                    draw.set_color(image, (rr, cc), boxColor, alpha=0.8)
-                    draw.set_color(image, (rr2, cc2), boxColor, alpha=0.8)
-                    draw.set_color(image, (rr3, cc3), boxColor, alpha=0.8)
-                    draw.set_color(image, (rr4, cc4), boxColor, alpha=0.8)
-                    draw.set_color(image, (rr5, cc5), boxColor, alpha=0.8)
-                if not makeImageOnly:
-                    io.imshow(image)
-                    io.show()
-                detections = {
-                    "detections": detections,
-                    "image": image,
-                    "caption": "\n<br/>".join(imcaption)
-                }
-            except Exception as e:
-                print("Unable to show image: " + str(e))
-
-    return detections
 
 # 외부에서 Darknet Detect사용
 class DarknetDetect:
@@ -513,12 +340,6 @@ class DarknetDetect:
         from PIL import Image
         import wx
 
-        '''
-        if self.camip!=camip or newcap:
-            self.camip = camip
-            self.cap = cv2.VideoCapture(camip)
-        '''
-
         self.initcam(camip)
 
         ret, frame = self.cap.read()
@@ -539,11 +360,6 @@ class DarknetDetect:
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
-        '''
-        if self.camip!=camip or newcap:
-            self.camip = camip
-            self.cap = cv2.VideoCapture(camip)
-        '''
 
         frame = self.getcamimage(camip, converttowxbitmap=False)
         detections = detect(self.netMain, self.metaMain, frame, self.thresh)

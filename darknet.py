@@ -461,6 +461,7 @@ class DarknetDetect:
     def __init__(self):
         self.thresh = 0.25
         self.camip = -1
+        self.cap = None
 
         configPath = "./cfg/yolov3.cfg"
         weightPath = "yolov3.weights"
@@ -500,8 +501,8 @@ class DarknetDetect:
                 pass
 
 
-    # 단순하게 캠의 프레임만 읽어서 리턴
-    def getcamimage(self, camip, newcap=True):
+    # 단순하게 캠의 현재 프레임만 읽어서 리턴
+    def getcamimage(self, camip, converttowxbitmap=True, size=(0, 0), newcap=True):
         import cv2
         from PIL import Image
         import wx
@@ -512,63 +513,68 @@ class DarknetDetect:
             self.cap = cv2.VideoCapture(camip)
         '''
 
-        cap = cv2.VideoCapture(camip)
-        ret, frame = cap.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        if self.cap is None:
+            self.cap = cv2.VideoCapture(camip)
 
-            source_img = Image.fromarray(frame)
+        ret, frame = self.cap.read()
+        if not ret:
+            print("에러")
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+        # 사이즈 바꾸기
+        if size[0] is not 0:
+            frame = cv2.resize(frame, size)
+
+        source_img = Image.fromarray(frame)
+
+        if converttowxbitmap:
             width, height = source_img.size
-
             return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
-
-        print("Failed To Load IMAGE! in getcamimage")
-        return wx.Bitmap.Create(200, 200, depth=wx.BITMAP_SCREEN_DEPTH)
+        return frame
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
-    def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, newcap=True):
+    def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
         import cv2
         '''
         if self.camip!=camip or newcap:
             self.camip = camip
             self.cap = cv2.VideoCapture(camip)
         '''
-        cap = cv2.VideoCapture(camip)
-        ret, frame = cap.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
-            if drawboxes:
-                from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+        frame = self.getcamimage(camip, converttowxbitmap=False)
+        detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
-                source_img = Image.fromarray(frame)
+        if drawboxes:
+            from PIL import Image, ImageFont, ImageDraw, ImageEnhance
 
-                draw = ImageDraw.Draw(source_img)
+            source_img = Image.fromarray(frame)
 
-                for detection in detections:
-                    if detection[0] == "person":
-                        bounds = detection[2]
-                        # Left Top X,Y
-                        ltx = bounds[0]-bounds[2]/2
-                        lty = bounds[1]-bounds[3]/2
+            draw = ImageDraw.Draw(source_img)
 
-                        # Right Bottom X,Y
-                        rbx = bounds[0] + bounds[2] / 2
-                        rby = bounds[1] + bounds[3] / 2
+            for detection in detections:
+                if detection[0] == "person":
+                    bounds = detection[2]
+                    # Left Top X,Y
+                    ltx = bounds[0]-bounds[2]/2
+                    lty = bounds[1]-bounds[3]/2
 
-                        draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
-                if saveimage:
-                    source_img.save("../haha.png", "PNG")
+                    # Right Bottom X,Y
+                    rbx = bounds[0] + bounds[2] / 2
+                    rby = bounds[1] + bounds[3] / 2
 
-            resultimage = source_img
-            if converttowximage:
-                import wx
-                width, height = resultimage.size
-                resultimage = wx.Bitmap.FromBuffer(width, height, resultimage.convert("RGB").tobytes())
-            return detections, resultimage
-        print("Failed To Load IMAGE! in framedetect")
+                    draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
+            if saveimage:
+                source_img.save("../haha.png", "PNG")
+
+        resultimage = source_img
+        if size[0] is not 0:
+            resultimage = resultimage.resize(size, Image.ANTIALIAS)
+        if converttowximage:
+            import wx
+            width, height = resultimage.size
+            resultimage = wx.Bitmap.FromBuffer(width, height, resultimage.convert("RGB").tobytes())
+        return detections, resultimage
+
 
 if __name__ == "__main__":
     # 사용예

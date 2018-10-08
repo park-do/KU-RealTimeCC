@@ -3,10 +3,10 @@ from threading import Thread
 from time import sleep
 
 
-def bitmapthread(imageCtrl,detector,camip):
+def bitmapthread(imageCtrl,detector,camip,size):
     #루프
     while True:
-        _, bitmap = detector.framedetect(camip=camip)
+        _, bitmap = detector.framedetect(camip=camip, size=size)
         imageCtrl.Bitmap = bitmap
 
 
@@ -19,18 +19,13 @@ class FrameOne(wx.Frame):
         title = "프레임1"
 
         app = wx.App(False)  # wx 초기화
-        wx.Frame.__init__(self, parent, title=title, size=(500, 500))  # 사이즈에 -1 넣으면 기본값 나옴
-        panel = wx.Panel(self)
-        button = wx.Button(panel, label="수집시작", pos=(400, 400), size=(60, 60))
+        wx.Frame.__init__(self, parent, title=title, size=(600, 600))  # 사이즈에 -1 넣으면 기본값 나옴
+        self.startPanel = wx.Panel(self)
+        self.inputtext = wx.TextCtrl(self.startPanel, -1, "Cam ip or number", pos=(10, 300), size=(450, 60))
+        button = wx.Button(self.startPanel, label="수집시작", pos=(500, 300), size=(60, 60))
         self.Bind(wx.EVT_BUTTON, self.onButton, button)
+        self.imageCtrl = None
 
-        # testing cam ip
-        self.camip = 'http://192.168.1.165:8080'
-        # Image Control에 처음으로 넣을 프레임을 가져옵니다.
-        bitmap = self.d.getcamimage(camip=self.camip)
-        # get com image에서 찾아온 첫 프레임을 미리 넣어둡니다.
-        self.imageCtrl = wx.StaticBitmap(panel, wx.ID_ANY, bitmap,
-                                         pos=(10, 10))
 
         self.Show(True)
         app.MainLoop()  # gui 실행
@@ -51,21 +46,41 @@ class FrameOne(wx.Frame):
         wx.MessageDialog(self, "종료", "종료합니다")
         """
 
-        # '''
+        # 변경할 캠사이즈
+        camsize = (480, 270)
+
+        # testing cam ip
+        # self.camip = 'http://192.168.1.55:8080'
+        try:
+            self.camip = int(self.inputtext.GetLineText(0))
+        except:
+            self.camip = self.inputtext.GetLineText(0)
+        print(self.camip)
+        # Image Control에 처음으로 넣을 프레임을 가져옵니다.
+        if self.imageCtrl is None:
+            bitmap = self.d.getcamimage(camip=self.camip, size = camsize)
+            # 처음으로 불러온것이면 get com image에서 찾아온 첫 프레임을 넣어둡니다.
+            self.imageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap,
+                                         pos=(10, 10))
+
+        '''
         # 여기는 버튼을 누를 때 갱신됩니다. 
         # detect결과를 가져옵니다.
         # 첫번째 return이 detect리스트입니다. 빈칸으로, 두번째 return이 처리된 이미지입니다.
-        _, bitmap = self.d.framedetect(camip=self.camip)
+        _, bitmap = self.d.framedetect(camip=self.camip, size = camsize)
         # 이미지컨트롤에 bitmap을 넣습니다.
         self.imageCtrl.Bitmap = bitmap
         # '''
-        '''
+
+        # '''
         # 여기는 버튼을 누른 후 스레드가 돌아갑니다.
-        t = Thread(target=bitmapthread, args=(self.imageCtrl, self.d, self.camip))
+        t = Thread(target=bitmapthread, args=(self.imageCtrl, self.d, self.camip, camsize))
         t.start()
-        '''
+        # '''
 
 
 
         # self.d.framedetect('http://192.168.1.55:8080')
         # self.Close(True) #종료
+
+

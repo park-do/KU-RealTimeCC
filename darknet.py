@@ -30,6 +30,8 @@ Windows Python 2.7 version: https://github.com/AlexeyAB/darknet/blob/fc496d52bf2
 #pylint: disable=R, W0401, W0614, W0703
 from ctypes import *
 from time import sleep
+from threading import Thread
+from threading import Lock
 import math
 import random
 import os
@@ -287,7 +289,8 @@ class DarknetDetect:
     def __init__(self):
         self.thresh = 0.25
         self.camip = -1
-        self.cap = None
+        self.cap = {}
+        self.lock = Lock()
 
         configPath = "./cfg/yolov3.cfg"
         weightPath = "yolov3.weights"
@@ -327,13 +330,15 @@ class DarknetDetect:
                 pass
 
     def initcam(self, camip):
-        if self.cap is None:
-            self.cap = cv2.VideoCapture(camip)
+        if camip not in self.cap:
+            self.cap[camip] = cv2.VideoCapture(camip)
+
+        return self.cap[camip]
 
     # 캠의 가로세로 크기 리턴
     def getcamsize(self, camip):
         self.initcam(camip)
-        return [self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        return [self.cap[camip].get(cv2.CAP_PROP_FRAME_WIDTH), self.cap[camip].get(cv2.CAP_PROP_FRAME_HEIGHT)]
 
     # 단순하게 캠의 현재 프레임만 읽어서 리턴
     def getcamimage(self, camip, converttowxbitmap=True, size=(0, 0), newcap=True):
@@ -342,9 +347,10 @@ class DarknetDetect:
 
         self.initcam(camip)
 
-        ret, frame = self.cap.read()
+        ret, frame = self.cap[camip].read()
         if not ret:
             print("에러")
+            return False, None
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # 사이즈 바꾸기
@@ -355,14 +361,15 @@ class DarknetDetect:
 
         if converttowxbitmap:
             width, height = source_img.size
-            return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
-        return frame
+            return True, wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
+        return True, frame
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
 
-        frame = self.getcamimage(camip, converttowxbitmap=False)
-        detections = detect(self.netMain, self.metaMain, frame, self.thresh)
+        _, frame = self.getcamimage(camip, converttowxbitmap=False)
+        with self.lock:
+            detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
         if drawboxes:
             from PIL import Image, ImageFont, ImageDraw, ImageEnhance

@@ -1,6 +1,8 @@
 
 # it is dectection grid
-class detectgrid:
+
+
+class DetectGrid:
 
     def __init__(self):
 
@@ -16,6 +18,6 @@ class detectgrid:
     @:param rect is [left top x, left top y, right bottom x, right bottom y]. it will replace the dotList.
     '''
     def addRect(self, rect):
-        self.dotList = [[rect[0], rect[1], [rect[2], rect[1]], [rect[2], rect[3]], rect[0], rect[3]]]
+        self.dotList = [[rect[0], rect[1]], [rect[2], rect[1]], [rect[2], rect[3]], [rect[0], rect[3]]]
 
 

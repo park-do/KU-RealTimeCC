@@ -1,6 +1,7 @@
 
 # it is dectection grid
-
+from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+import imageutility
 
 class DetectGrid:
 
@@ -15,9 +16,29 @@ class DetectGrid:
         self.dotList = self.dotList + dots
 
     '''
-    @:param rect is [left top x, left top y, right bottom x, right bottom y]. it will replace the dotList.
+    @:param rect is (left top x, left top y, right bottom x, right bottom y). it will replace the dotList.
     '''
     def addRect(self, rect):
         self.dotList = [[rect[0], rect[1]], [rect[2], rect[1]], [rect[2], rect[3]], [rect[0], rect[3]]]
 
+    def isInRect(self, pos):
+        xcheck = self.dotList[0][0] <= pos[0] <= self.dotList[2][0]
+        ycheck = self.dotList[0][1] <= pos[1] <= self.dotList[2][1]
+        if xcheck:
+            print(str(self.dotList[0][0]) + " " + str(pos[0]) + " " + str(self.dotList[2][0]))
+        if ycheck:
+            print(str(self.dotList[0][1]) + " " + str(pos[1]) + " " + str(self.dotList[2][1]))
+        return xcheck and ycheck
 
+    def drawGrid(self, image, color="red"):
+        image = imageutility.wx2PIL(image)
+        draw = ImageDraw.Draw(image)
+
+        # 그려주기
+        for i in range(0, len(self.dotList)-1):
+            draw.line((self.dotList[i][0], self.dotList[i][1], self.dotList[i+1][0], self.dotList[i+1][1]), color, 2)
+
+        # 닫아주기
+        draw.line((self.dotList[0][0], self.dotList[0][1], self.dotList[len(self.dotList)-1][0], self.dotList[len(self.dotList)-1][1]), color, 2)
+
+        return imageutility.PIL2wx(image)

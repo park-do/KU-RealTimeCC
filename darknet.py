@@ -264,9 +264,9 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
                     nameTag = altNames[i]
                 
                     #print("Got bbox", b)
-                    print(nameTag)
-                    print(dets[j].prob[i])
-                    print((b.x, b.y, b.w, b.h))
+                    #print(nameTag)
+                    #print(dets[j].prob[i])
+                    #print((b.x, b.y, b.w, b.h))
                 res.append((nameTag, dets[j].prob[i], (b.x, b.y, b.w, b.h)))
     print("the number of people is: " + numberofpeople.__str__())
     if debug: print("did range")
@@ -366,17 +366,23 @@ class DarknetDetect:
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
+        from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+        ret, frame = self.getcamimage(camip, converttowxbitmap=False)
+        if not ret:
+            return None, None
 
-        _, frame = self.getcamimage(camip, converttowxbitmap=False)
         with self.lock:
             detections = detect(self.netMain, self.metaMain, frame, self.thresh)
 
-        if drawboxes:
-            from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+        source_img = Image.fromarray(frame)
+        if size[0] is not 0:
+            source_img = source_img.resize(size, Image.ANTIALIAS)
 
-            source_img = Image.fromarray(frame)
+        if drawboxes:
 
             draw = ImageDraw.Draw(source_img)
+
+            originalSize = self.getcamsize(camip)
 
             for detection in detections:
                 if detection[0] == "person":
@@ -389,13 +395,19 @@ class DarknetDetect:
                     rbx = bounds[0] + bounds[2] / 2
                     rby = bounds[1] + bounds[3] / 2
 
-                    draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
+                    if size[0] is not 0:
+                        ratio = [size[0] / originalSize[0], size[1] / originalSize[1]]
+                        ltx *= ratio[0]
+                        rbx *= ratio[0]
+                        lty *= ratio[1]
+                        rby *= ratio[1]
+
+                    draw.rectangle((ltx, lty, rbx, rby), outline="magenta")
             if saveimage:
                 source_img.save("../haha.png", "PNG")
 
         resultimage = source_img
-        if size[0] is not 0:
-            resultimage = resultimage.resize(size, Image.ANTIALIAS)
+
         if converttowximage:
             import wx
             width, height = resultimage.size

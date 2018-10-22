@@ -331,7 +331,14 @@ class DarknetDetect:
 
     def initcam(self, camip):
         if camip not in self.cap:
-            self.cap[camip] = cv2.VideoCapture(camip)
+            if "you" in str(camip):
+                import pafy
+                url = camip
+                vPafy = pafy.new(url)
+                play = vPafy.getbest(preftype="webm")
+                self.cap[camip] = cv2.VideoCapture(play.url)
+            else:
+                self.cap[camip] = cv2.VideoCapture(camip)
 
         return self.cap[camip]
 

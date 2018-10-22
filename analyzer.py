@@ -12,7 +12,7 @@ class Analyzer:
 
     '''생성자'''
     def __init__(self):
-        self.df = pd.DataFrame(columns=['OBJECT', 'ACCURACY', 'POSITION', 'TIME'])
+        self.df = pd.DataFrame(columns=['OBJECT', 'ACCURACY', 'POSITION', 'GRIDINDEX', 'TIME'])
 
     '''데이터 로우 추가'''
     def add_row(self, detection_list):

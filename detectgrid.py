@@ -24,10 +24,6 @@ class DetectGrid:
     def isInRect(self, pos):
         xcheck = self.dotList[0][0] <= pos[0] <= self.dotList[2][0]
         ycheck = self.dotList[0][1] <= pos[1] <= self.dotList[2][1]
-        if xcheck:
-            print(str(self.dotList[0][0]) + " " + str(pos[0]) + " " + str(self.dotList[2][0]))
-        if ycheck:
-            print(str(self.dotList[0][1]) + " " + str(pos[1]) + " " + str(self.dotList[2][1]))
         return xcheck and ycheck
 
     def drawGrid(self, image, color="red"):

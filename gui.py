@@ -22,9 +22,9 @@ class FrameOne(wx.Frame):
         title = "RealTimeCC"
 
         self.gridList["00"] = detectgrid.DetectGrid()
-        self.gridList["00"].addRect([8, 338, 302, 490])
+        self.gridList["00"].addRect([600, 300, 800, 400])
         self.gridList["01"] = detectgrid.DetectGrid()
-        self.gridList["01"].addRect([376, 284, 586, 394])
+        self.gridList["01"].addRect([600, 420, 800, 530])
 
         self.gridList["10"] = detectgrid.DetectGrid()
         self.gridList["10"].addRect([70, 354, 255, 539])
@@ -39,6 +39,8 @@ class FrameOne(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onAddButton, button)
         button = wx.Button(self.startPanel, label="시작", pos=(70, 10), size=(60, 40))
         self.Bind(wx.EVT_BUTTON, self.onStartButton, button)
+        button = wx.Button(self.startPanel, label="저장", pos=(130, 10), size=(60, 40))
+        self.Bind(wx.EVT_BUTTON, self.onSaveButton, button)
         self.imageCtrl = None
         self.Show(True)
         app.MainLoop()  # gui 실행
@@ -136,6 +138,9 @@ class FrameOne(wx.Frame):
         # self.d.framedetect('http://192.168.1.55:8080')
         # self.Close(True) #종료
 
+    def onSaveButton(self, e):
+        self.a.df.to_csv('../test.csv')
+
     def onStartButton(self, e):
         camsize = (960, 540)
         # 처음으로 버튼을 누른 후 스레드가 돌아갑니다.
@@ -146,12 +151,16 @@ class FrameOne(wx.Frame):
     def PreviewThreading(self, imageCtrl, detector, size):
         #루프
         camSize = detector.getcamsize(self.nowCamIP)
+        jjj = 0
         while True:
+            # if jjj == 10:
+            #     break
+            # jjj+=1
             detection_list, bitmap = detector.framedetect(camip=self.nowCamIP, size=size, drawboxes=False)
+            analyze_list = [];
             if detection_list is None:
                 break
             # ret, bitmap = detector.getcamimage(self.nowCamIP, size=size)
-            self.a.add_row(detection_list)
             #if ret:
 
             originalSize = detector.getcamsize(self.nowCamIP)
@@ -204,17 +213,22 @@ class FrameOne(wx.Frame):
                                 color = "red"
                                 if gridIndex == 1:
                                     color = "blue"
-                                draw.rectangle((ltx, lty, rbx, rby), outline=color)
+                                # draw.rectangle((ltx, lty, rbx, rby), outline=color)
+
+                            analyze_list.append(detection + (gridIndex,))
+
                         else:
                             break
 
                         gridIndex+=1
 
+                if len(analyze_list) > 0:
+                    self.a.add_row(analyze_list)
 
 
-            bitmap = imageutility.PIL2wx(image)
-            imageCtrl.Bitmap = bitmap
-            # sleep(0.0333333)
+            # bitmap = imageutility.PIL2wx(image)
+            # imageCtrl.Bitmap = bitmap
+            sleep(0.0001)
 
         self.a.df.to_csv('../test.csv')
-        self.a.save_heatmap(camSize[0], camSize[1])
+        # self.a.save_heatmap(camSize[0], camSize[1])

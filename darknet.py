@@ -30,6 +30,8 @@ Windows Python 2.7 version: https://github.com/AlexeyAB/darknet/blob/fc496d52bf2
 #pylint: disable=R, W0401, W0614, W0703
 from ctypes import *
 from time import sleep
+from threading import Thread
+from threading import Lock
 import math
 import random
 import os
@@ -262,9 +264,9 @@ def detect(net, meta, image, thresh=.5, hier_thresh=.5, nms=.45, debug= False):
                     nameTag = altNames[i]
                 
                     #print("Got bbox", b)
-                    print(nameTag)
-                    print(dets[j].prob[i])
-                    print((b.x, b.y, b.w, b.h))
+                    #print(nameTag)
+                    #print(dets[j].prob[i])
+                    #print((b.x, b.y, b.w, b.h))
                 res.append((nameTag, dets[j].prob[i], (b.x, b.y, b.w, b.h)))
     print("the number of people is: " + numberofpeople.__str__())
     if debug: print("did range")
@@ -287,7 +289,8 @@ class DarknetDetect:
     def __init__(self):
         self.thresh = 0.25
         self.camip = -1
-        self.cap = None
+        self.cap = {}
+        self.lock = Lock()
 
         configPath = "./cfg/yolov3.cfg"
         weightPath = "yolov3.weights"
@@ -327,13 +330,22 @@ class DarknetDetect:
                 pass
 
     def initcam(self, camip):
-        if self.cap is None:
-            self.cap = cv2.VideoCapture(camip)
+        if camip not in self.cap:
+            if "you" in str(camip):
+                import pafy
+                url = camip
+                vPafy = pafy.new(url)
+                play = vPafy.getbest(preftype="webm")
+                self.cap[camip] = cv2.VideoCapture(play.url)
+            else:
+                self.cap[camip] = cv2.VideoCapture(camip)
+
+        return self.cap[camip]
 
     # 캠의 가로세로 크기 리턴
     def getcamsize(self, camip):
         self.initcam(camip)
-        return [self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+        return [self.cap[camip].get(cv2.CAP_PROP_FRAME_WIDTH), self.cap[camip].get(cv2.CAP_PROP_FRAME_HEIGHT)]
 
     # 단순하게 캠의 현재 프레임만 읽어서 리턴
     def getcamimage(self, camip, converttowxbitmap=True, size=(0, 0), newcap=True):
@@ -342,9 +354,10 @@ class DarknetDetect:
 
         self.initcam(camip)
 
-        ret, frame = self.cap.read()
+        ret, frame = self.cap[camip].read()
         if not ret:
             print("에러")
+            return False, None
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # 사이즈 바꾸기
@@ -355,21 +368,28 @@ class DarknetDetect:
 
         if converttowxbitmap:
             width, height = source_img.size
-            return wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
-        return frame
+            return True, wx.Bitmap.FromBuffer(width, height, source_img.convert("RGB").tobytes())
+        return True, frame
 
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
+        from PIL import Image, ImageFont, ImageDraw, ImageEnhance
+        ret, frame = self.getcamimage(camip, converttowxbitmap=False)
+        if not ret:
+            return None, None
 
-        frame = self.getcamimage(camip, converttowxbitmap=False)
-        detections = detect(self.netMain, self.metaMain, frame, self.thresh)
+        with self.lock:
+            detections = detect(self.netMain, self.metaMain, frame, self.thresh)
+
+        source_img = Image.fromarray(frame)
+        if size[0] is not 0:
+            source_img = source_img.resize(size, Image.ANTIALIAS)
 
         if drawboxes:
-            from PIL import Image, ImageFont, ImageDraw, ImageEnhance
-
-            source_img = Image.fromarray(frame)
 
             draw = ImageDraw.Draw(source_img)
+
+            originalSize = self.getcamsize(camip)
 
             for detection in detections:
                 if detection[0] == "person":
@@ -382,13 +402,19 @@ class DarknetDetect:
                     rbx = bounds[0] + bounds[2] / 2
                     rby = bounds[1] + bounds[3] / 2
 
-                    draw.rectangle((ltx, lty, rbx, rby),outline="magenta")
+                    if size[0] is not 0:
+                        ratio = [size[0] / originalSize[0], size[1] / originalSize[1]]
+                        ltx *= ratio[0]
+                        rbx *= ratio[0]
+                        lty *= ratio[1]
+                        rby *= ratio[1]
+
+                    draw.rectangle((ltx, lty, rbx, rby), outline="magenta")
             if saveimage:
                 source_img.save("../haha.png", "PNG")
 
         resultimage = source_img
-        if size[0] is not 0:
-            resultimage = resultimage.resize(size, Image.ANTIALIAS)
+
         if converttowximage:
             import wx
             width, height = resultimage.size

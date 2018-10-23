@@ -1,6 +1,7 @@
 import wx
 from threading import Thread
 from time import sleep
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 
 
 def bitmapthread(imageCtrl,detector,camip,size):
@@ -30,21 +31,6 @@ class FrameOne(wx.Frame):
         app.MainLoop()  # gui 실행
 
     def onButton(self, e):
-        # wx.BitmapFromImage(self.detector.getcamimage(1))
-
-        """
-        이 부분을 웹캠을 넣어서 실행할 수 있으면 좋겠습니다
-        #camip = 'http://192.168.0.11:8080'
-        camip = 0
-        _, bitmap = self.d.framedetect(camip=camip)
-
-
-        t = Thread(target=bitmapthread, args=(self.imageCtrl, self.detector, camip))
-        t.start()
-
-        wx.MessageDialog(self, "종료", "종료합니다")
-        """
-
         # 변경할 캠사이즈
         camsize = (480, 270)
 
@@ -68,27 +54,21 @@ class FrameOne(wx.Frame):
             self.imageCtrl = wx.StaticBitmap(self.secondPanel, wx.ID_ANY, bitmap,
                                          pos=(10, 10))
 
-
-        '''
-        # '''
-        # 여기는 버튼을 누를 때 갱신됩니다.
-        # detect결과를 가져옵니다.
-        # 첫번째 return이 detect리스트입니다. 빈칸으로, 두번째 return이 처리된 이미지입니다.
-
         for i in range(0, 5):
-            sleep(1)
             detection_list, bitmap = self.d.framedetect(camip=self.camip)
             self.imageCtrl.Bitmap = bitmap  # 이미지컨트롤에 bitmap을 넣습니다.
             self.a.add_row(detection_list)
             self.a.df.to_csv('C:/Users/이동우/Desktop/test.csv')
-        self.a.show_heatmap()
-        # '''
 
-        # '''
-        # 여기는 버튼을 누른 후 스레드가 돌아갑니다.
-        t = Thread(target=bitmapthread, args=(self.imageCtrl, self.d, self.camip, camsize))
-        t.start()
-        # '''
+        r_x,r_y = self.d.getcamsize(0)
+        fig = self.a.save_heatmap(r_x=r_x,r_y=r_y)
+        FigureCanvasWxAgg(self.imageCtrl, -1, fig)
+
+        '''
+        #여기는 버튼을 누른 후 스레드가 돌아갑니다.
+        #t = Thread(target=bitmapthread, args=(self.imageCtrl, self.d, self.camip, camsize))
+        #t.start()
+        '''
 
 
 

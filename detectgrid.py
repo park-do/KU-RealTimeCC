@@ -3,7 +3,7 @@
 from PIL import Image, ImageFont, ImageDraw, ImageEnhance
 import imageutility
 
-class DetectGrid:
+class detectgrid:
 
     def __init__(self):
 
@@ -25,6 +25,15 @@ class DetectGrid:
         xcheck = self.dotList[0][0] <= pos[0] <= self.dotList[2][0]
         ycheck = self.dotList[0][1] <= pos[1] <= self.dotList[2][1]
         return xcheck and ycheck
+
+    def setDot(self, index, pos):
+        prePos = self.dotList[index]
+        self.dotList[index] = pos
+        for dot in self.dotList:
+            if dot[0] == prePos[0]:
+                dot[0] = pos[0]
+            if dot[1] == prePos[1]:
+                dot[1] = pos[1]
 
     def drawGrid(self, image, color="red"):
         image = imageutility.wx2PIL(image)

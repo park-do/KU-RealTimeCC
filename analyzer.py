@@ -16,11 +16,11 @@ class Analyzer:
 
     '''데이터 로우 추가'''
     def add_row(self, detection_list):
-        now = str(datetime.now())
+        # now = str(datetime.now())
         for row in detection_list:
             if row[0] == 'person':  # 사람만 추가함
                 row = list(row)  # tuple을 list로
-                row.append(now)  # 현재 시간 추가
+                # row.append(now)  # 현재 시간 추가 # PJK: 시간 추가를 gui처리부로 옮깁니다.
                 self.df.loc[len(self.df)] = row
                 # POSITION: (x,y)(w,h)
 

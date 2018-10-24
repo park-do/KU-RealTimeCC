@@ -14,13 +14,14 @@ class cccamera:
         self.gridList.append(grid)
 
     def GrapDot(self, pos):
+        grabRange = 10
         # 그리드 리스트를 돌며 그리드 확인
         for gridindex in range(0, len(self.gridList)):
             grid = self.gridList[gridindex]
             # dotList도 확인. Index를 넘겨줘야 하므로 index
             for dotindex in range(0, len(grid.dotList)):
                 #근처에 있는 점이 있으면 리턴
-                if abs(grid.dotList[dotindex][0] - pos[0]) < 5 and abs(grid.dotList[dotindex][1] - pos[1]) < 5:
+                if abs(grid.dotList[dotindex][0] - pos[0]) <= grabRange and abs(grid.dotList[dotindex][1] - pos[1]) <= grabRange:
                     return gridindex, dotindex
 
         #없으면 -1, -1

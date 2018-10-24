@@ -46,8 +46,10 @@ class FrameOne(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnStartButton, button)
         button = wx.Button(self.startPanel, label="저장", pos=(130, 10), size=(60, 40))
         self.Bind(wx.EVT_BUTTON, self.OnSaveButton, button)
-        button = wx.Button(self.startPanel, label="그리드추가", pos=(190, 10), size=(60, 40))
+        button = wx.Button(self.startPanel, label="그리드추가", pos=(190, 10), size=(100, 40))
         self.Bind(wx.EVT_BUTTON, self.OnGridAddButton, button)
+        button = wx.Button(self.startPanel, label="CSV분석", pos=(290, 10), size=(80, 40))
+        self.Bind(wx.EVT_BUTTON, self.OnCSVAnalyzeButton, button)
         self.imageCtrl = None
         self.Show(True)
         app.MainLoop()  # gui 실행
@@ -169,9 +171,11 @@ class FrameOne(wx.Frame):
 
     def OnLeftMouseButtonUp(self, mouseEvent: wx.MouseEvent):
         print("Up : " + str(mouseEvent.GetPosition()))
-        # 전에 Down에서 맞는 grid 점을 찾았을 경우
+        # 이전 Down에서 맞는 grid 점을 찾았을 경우
         if self.gridIndex != -1 and self.dotIndex != -1:
+            # DOT 세팅해주고
             self.cameraList[self.nowCamIndex].gridList[self.gridIndex].setDot(self.dotIndex, mouseEvent.GetPosition())
+            # 리프레시
             self.RefreshPreview()
 
         self.gridIndex = self.dotIndex = -1
@@ -180,6 +184,15 @@ class FrameOne(wx.Frame):
         print("GridAddButton")
         self.cameraList[self.nowCamIndex].AddGrid()
         self.RefreshPreview()
+
+    def OnCSVAnalyzeButton(self, e):
+        print("CSVButton")
+        dlg = wx.DirDialog(self, 'Enter Csv path', 'CSV PATH', wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            # TODO: ANALYZE with the CVSs.
+            print("DO SOMETHING with : " + path)
+
 
     def RefreshPreview(self):
         _, bitmap = self.d.getcamimage(camip=self.nowCamIP, size=(960, 540))

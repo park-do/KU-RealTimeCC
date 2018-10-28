@@ -36,7 +36,7 @@ class detectgrid:
                 dot[1] = pos[1]
 
     def drawGrid(self, image, color="red"):
-        image = imageutility.wx2PIL(image)
+        # image = imageutility.wx2PIL(image)
         draw = ImageDraw.Draw(image)
 
         # 그려주기
@@ -46,4 +46,4 @@ class detectgrid:
         # 닫아주기
         draw.line((self.dotList[0][0], self.dotList[0][1], self.dotList[len(self.dotList)-1][0], self.dotList[len(self.dotList)-1][1]), color, 2)
 
-        return imageutility.PIL2wx(image)
+        return image  # imageutility.PIL2wx(image)

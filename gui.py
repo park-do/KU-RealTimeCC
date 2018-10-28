@@ -127,7 +127,7 @@ class FrameOne(wx.Frame):
         # self.Close(True) #종료
 
     def OnSaveButton(self, e):
-        self.a.df.to_csv('../test.csv')
+        self.a.to_csv()  # df.to_csv('../test.csv')
 
     def OnStartButton(self, e):
         for camera in self.cameraList:
@@ -137,6 +137,8 @@ class FrameOne(wx.Frame):
         self.camAddButton.Show(False)
         self.gridAddButton.Show(False)
         self.csvAnalyzeButton.Show(False)
+
+        self.a.grid_to_csv(self.cameraList)
 
     def OnLeftMouseButtonDown(self, mouseEvent : wx.MouseEvent):
         camera = self.cameraList[self.nowCamIndex]
@@ -151,14 +153,14 @@ class FrameOne(wx.Frame):
             # DOT 세팅해주고
             self.cameraList[self.nowCamIndex].gridList[self.gridIndex].setDot(self.dotIndex, mouseEvent.GetPosition())
             # 리프레시
-            self.RefreshPreview()
+            # self.RefreshPreview()
 
         self.gridIndex = self.dotIndex = -1
 
     def OnGridAddButton(self, mouseEvent: wx.MouseEvent):
         print("GridAddButton")
         self.cameraList[self.nowCamIndex].AddGrid()
-        self.RefreshPreview()
+        # self.RefreshPreview()
 
     def OnCSVAnalyzeButton(self, e):
         print("CSVButton")

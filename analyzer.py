@@ -5,6 +5,7 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import ast  # 데이터 프레임을 읽어서 스트링을 튜플로 만들 때 필요
 from datetime import datetime
+import os
 
 
 class Analyzer:
@@ -13,6 +14,12 @@ class Analyzer:
     '''생성자'''
     def __init__(self):
         self.df = pd.DataFrame(columns=['OBJECT', 'ACCURACY', 'POSITION', 'GRIDINDEX', 'TIME'])
+        # strfmt = '%y%m%d %H%M%S'
+        # self.timename = str(datetime.fromtimestamp(time.time()).strftime(strfmt))
+        self.timename = str(datetime.now())
+        self.timename = self.timename[:self.timename.find('.')].replace(":", "").replace("-", "")
+        self.csvcount = 0
+        self.csvcut = 500
 
     '''데이터 로우 추가'''
     def add_row(self, detection_list):
@@ -24,9 +31,34 @@ class Analyzer:
                 self.df.loc[len(self.df)] = row
                 # POSITION: (x,y)(w,h)
 
+    '''row 길이 체크'''
+    def after_add_row(self):
+        if self.df.size >= self.csvcut * 6:
+            self.to_csv()
+            self.df = pd.DataFrame(columns=['OBJECT', 'ACCURACY', 'POSITION', 'GRIDINDEX', 'TIME'])
+
+    def grid_to_csv(self, cameraList):
+        griddf = pd.DataFrame(columns=['CAMID', 'CAMSIZE', 'GRIDID', 'POSITION'])
+        for camera in cameraList:
+            for gridIndex in range(0, len(camera.gridList)):
+                dl = camera.gridList[gridIndex].dotList
+                row = (camera.camindex, tuple(camera.camsize), str(camera.camindex) + str(gridIndex+1), (((dl[0][0]+dl[2][0])/2, (dl[0][1]+dl[2][1])/2, dl[2][0]-dl[0][0], dl[2][1]-dl[0][1])))
+                griddf.loc[len(griddf)] = list(row)
+
+        dirstr = "../" + str(self.timename)
+        if not os.path.exists(dirstr):
+            os.makedirs(dirstr)
+
+        griddf.to_csv(dirstr + "/grid.csv")
+
     '''결과 저장 함수'''
     def to_csv(self):
-        self.df.to_csv('c:/test/test.csv')
+        dirstr = "../" + str(self.timename)
+        if not os.path.exists(dirstr):
+            os.makedirs(dirstr)
+
+        self.df.to_csv(dirstr + "/" + str(self.timename)+"_"+str(self.csvcount)+".csv")
+        self.csvcount += 1
 
     '''r_x, r_y는 해상도'''
     def save_heatmap(self, r_x, r_y):

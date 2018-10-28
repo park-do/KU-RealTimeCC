@@ -16,6 +16,7 @@ class CCCamera:
         self.gridList: detectgrid.detectgrid = []
         self.camip = ""
         self.camindex = 0
+        self.camsize = (10,10)
         self.nowBitmap: wx.Bitmap = None
         self.isDetecting = False
         self.previewThread = None
@@ -45,18 +46,19 @@ class CCCamera:
 
     def CamPlayThread(self, detector: darknet.DarknetDetect, analyzerInst: analyzer.Analyzer):
         camsize = detector.getcamsize(self.camip)
+        self.camsize = camsize
         size = (960, 540)
         while True:
             t0 = time.clock()
             now = str(datetime.now())
             detection_list = []
             analyze_list = []
-            term = 10
+            term = 1
 
             if self.isDetecting is True:
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
-                term = 1
+                term = 5
                 _, bitmap = detector.getcamimage(self.camip, size=size)
 
             if detection_list is None:
@@ -126,7 +128,7 @@ class CCCamera:
                     camgrid = str(self.camindex) + "0"
                     analyze_list.append(detection + (camgrid, now))
                 analyzerInst.add_row(analyze_list)
-
+            analyzerInst.after_add_row()
             self.nowBitmap = imageutility.PIL2wx(gridImage)
             # imageCtrl.Bitmap = bitmap
             print(time.clock() - t0)

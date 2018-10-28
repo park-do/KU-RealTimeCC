@@ -19,7 +19,9 @@ class CCCamera:
         self.camsize = (10,10)
         self.nowBitmap: wx.Bitmap = None
         self.isDetecting = False
+        self.isReady = False
         self.previewThread = None
+        self.timeStamp = ""
 
     def AddGrid(self):
         grid = detectgrid.detectgrid()
@@ -49,13 +51,15 @@ class CCCamera:
         self.camsize = camsize
         size = (960, 540)
         while True:
-            t0 = time.clock()
-            now = str(datetime.now())
             detection_list = []
             analyze_list = []
             term = 1
 
+            t0 = time.clock()
             if self.isDetecting is True:
+                while self.isReady is True:
+                    sleep(0)
+                t0 = time.clock()
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
                 term = 5
@@ -120,13 +124,13 @@ class CCCamera:
                                 color = "yellow"
                             draw.rectangle((ltx, lty, rbx, rby), outline=color)
                             camgrid = str(self.camindex)+""+str(gridIndex+1)
-                            analyze_list.append(detection + (camgrid, now))
+                            analyze_list.append(detection + (camgrid, self.timeStamp))
 
                         gridIndex += 1
 
                 if len(analyze_list) <= 0:
                     camgrid = str(self.camindex) + "0"
-                    analyze_list.append(detection + (camgrid, now))
+                    analyze_list.append(detection + (camgrid, self.timeStamp))
                 analyzerInst.add_row(analyze_list)
             analyzerInst.after_add_row()
             self.nowBitmap = imageutility.PIL2wx(gridImage)
@@ -136,6 +140,8 @@ class CCCamera:
             if sleeptime >= 0:
                 sleep(sleeptime)
 
+            if self.isDetecting is True:
+                self.isReady = True
 
 
 

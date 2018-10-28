@@ -130,8 +130,11 @@ class FrameOne(wx.Frame):
         self.a.to_csv()  # df.to_csv('../test.csv')
 
     def OnStartButton(self, e):
+        timeStamp = str(datetime.now())
         for camera in self.cameraList:
             camera.isDetecting = True
+            camera.isReady = False
+            camera.timeStamp = timeStamp
 
         self.startButton.Show(False)
         self.camAddButton.Show(False)
@@ -200,6 +203,19 @@ class FrameOne(wx.Frame):
             if nowCam.nowBitmap is not None:
                 imageCtrl.Bitmap = nowCam.nowBitmap
             self.Refresh(eraseBackground=False)
+
+            detectStart = True
+            for cam in self.cameraList:
+                if cam.isReady is False:
+                    detectStart = False
+                    break
+            if detectStart is True:
+                timeStamp = str(datetime.now())
+                for cam in self.cameraList:
+                    cam.isReady = False
+                    cam.timeStamp = timeStamp
+
+
             sleep(0.1)
 
         # self.a.df.to_csv('../test.csv')

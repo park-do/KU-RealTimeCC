@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 import ast  # 데이터 프레임을 읽어서 스트링을 튜플로 만들 때 필요
 from datetime import datetime
 import os
+from threading import Lock
 
 
 class Analyzer:
@@ -20,16 +21,18 @@ class Analyzer:
         self.timename = self.timename[:self.timename.find('.')].replace(":", "").replace("-", "")
         self.csvcount = 0
         self.csvcut = 500
+        self.lock = Lock()
 
     '''데이터 로우 추가'''
     def add_row(self, detection_list):
         # now = str(datetime.now())
-        for row in detection_list:
-            if row[0] == 'person':  # 사람만 추가함
-                row = list(row)  # tuple을 list로
-                # row.append(now)  # 현재 시간 추가 # PJK: 시간 추가를 gui처리부로 옮깁니다.
-                self.df.loc[len(self.df)] = row
-                # POSITION: (x,y)(w,h)
+        with self.lock: # 혹시모르니까 락
+            for row in detection_list:
+                if row[0] == 'person':  # 사람만 추가함
+                    row = list(row)  # tuple을 list로
+                    # row.append(now)  # 현재 시간 추가 # PJK: 시간 추가를 gui처리부로 옮깁니다.
+                    self.df.loc[len(self.df)] = row
+                    # POSITION: (x,y)(w,h)
 
     '''row 길이 체크'''
     def after_add_row(self):

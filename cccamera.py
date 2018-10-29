@@ -62,7 +62,7 @@ class CCCamera:
                 t0 = time.clock()
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
-                term = 5
+                term = 0.01
                 _, bitmap = detector.getcamimage(self.camip, size=size)
 
             if detection_list is None:

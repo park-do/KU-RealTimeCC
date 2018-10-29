@@ -50,8 +50,9 @@ class FrameOne(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnGridAddButton, self.gridAddButton)
         self.csvAnalyzeButton = wx.Button(self.startPanel, label="CSV분석", pos=(290, 10), size=(80, 40))
         self.Bind(wx.EVT_BUTTON, self.OnCSVAnalyzeButton, self.csvAnalyzeButton)
-        self.Bind(wx.EVT_PAINT, self.onPaint)
+        # self.Bind(wx.EVT_PAINT, self.onPaint)
         self.imageCtrl = None
+        self.bgImageCtrl = None
         self.Show(True)
 
         self.startPanel.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -65,8 +66,8 @@ class FrameOne(wx.Frame):
         # if self.bmp:
         if len(self.cameraList) > 0:
             nowCam = self.cameraList[self.nowCamIndex]
-            bdc = wx.BufferedPaintDC(self.startPanel)
-            bdc.DrawBitmap(nowCam.nowBitmap, 10, 100)
+            bdc = wx.BufferedPaintDC(self.startPanel, nowCam.nowBitmap)
+            # bdc.DrawBitmap(nowCam.nowBitmap, 10, 100)
 
             evt.Skip()
 
@@ -112,9 +113,10 @@ class FrameOne(wx.Frame):
                 _, bitmap = self.d.getcamimage(camip=self.nowCamIP, size=camsize)
 
                 # 처음으로 불러온것이면 get com image에서 찾아온 첫 프레임을 넣어둡니다.
-                # self.imageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap, pos=(10, 100))
-                # self.imageCtrl.Bind(wx.EVT_LEFT_DOWN, self.OnLeftMouseButtonDown)
-                # self.imageCtrl.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
+                self.imageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap, pos=(10, 100))
+                self.bgImageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap, pos=(10, 100)) # 뒤쪽
+                self.imageCtrl.Bind(wx.EVT_LEFT_DOWN, self.OnLeftMouseButtonDown)
+                self.imageCtrl.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
 
                 # 처음으로 버튼을 누른 후 미리보기 스레드가 돌아갑니다.
                 self.previewThread = Thread(target=self.PreviewThreading, args=(self.imageCtrl, ))
@@ -203,7 +205,8 @@ class FrameOne(wx.Frame):
             nowCam = self.cameraList[self.nowCamIndex]
             if nowCam.nowBitmap is not None:
                 # imageCtrl.Bitmap = nowCam.nowBitmap
-                self.Refresh(eraseBackground=False)
+                self.bgImageCtrl.Bitmap = nowCam.nowBitmap
+                # self.Refresh(eraseBackground=False)
 
             detectStart = True
             for cam in self.cameraList:

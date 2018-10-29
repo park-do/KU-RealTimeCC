@@ -53,7 +53,7 @@ class CCCamera:
         while True:
             detection_list = []
             analyze_list = []
-            term = 1
+            term = 10
 
             t0 = time.clock()
             if self.isDetecting is True:
@@ -62,7 +62,7 @@ class CCCamera:
                 t0 = time.clock()
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
-                term = 0.01
+                term = 0.00
                 _, bitmap = detector.getcamimage(self.camip, size=size)
 
             if detection_list is None:

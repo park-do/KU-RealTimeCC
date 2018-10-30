@@ -19,6 +19,7 @@ class Analyzer:
         # self.timename = str(datetime.fromtimestamp(time.time()).strftime(strfmt))
         self.timename = str(datetime.now())
         self.timename = self.timename[:self.timename.find('.')].replace(":", "").replace("-", "")
+        self.saveDirectory = "../" + str(self.timename)
         self.csvcount = 0
         self.csvcut = 500
 
@@ -46,19 +47,19 @@ class Analyzer:
                 row = (camera.camindex, tuple(camera.camsize), str(camera.camindex) + str(gridIndex+1), (((dl[0][0]+dl[2][0])/2, (dl[0][1]+dl[2][1])/2, dl[2][0]-dl[0][0], dl[2][1]-dl[0][1])))
                 griddf.loc[len(griddf)] = list(row)
 
-        dirstr = "../" + str(self.timename)
-        if not os.path.exists(dirstr):
-            os.makedirs(dirstr)
 
-        griddf.to_csv(dirstr + "/grid.csv")
+        if not os.path.exists(self.saveDirectory):
+            os.makedirs(self.saveDirectory)
+
+        griddf.to_csv(self.saveDirectory + "/grid.csv")
 
     '''결과 저장 함수'''
     def to_csv(self):
-        dirstr = "../" + str(self.timename)
-        if not os.path.exists(dirstr):
-            os.makedirs(dirstr)
 
-        self.df.to_csv(dirstr + "/" + str(self.timename)+"_"+str(self.csvcount)+".csv")
+        if not os.path.exists(self.saveDirectory):
+            os.makedirs(self.saveDirectory)
+
+        self.df.to_csv(self.saveDirectory + "/" + str(self.timename) + "_" + str(self.csvcount) + ".csv")
         self.csvcount += 1
 
     '''디렉토리 읽어서 초기화'''
@@ -140,7 +141,7 @@ class Analyzer:
 
         fig.tight_layout()
         plt.show()
-        plt.savefig('../linechart.png')  # TODO: 디렉토리에 저장하게끔 만들어라
+        plt.savefig(self.saveDirectory + '/linechart.png')
 
     '''스택차트를 저장하는 함수'''
     def save_stackchart(self,param=0):
@@ -187,7 +188,7 @@ class Analyzer:
         ax1.legend(loc='upper left')
         ax1.set_ylabel('number of person')
         fig.tight_layout()
-        plt.savefig('../stackchart.png')  # TODO: 디렉토리에 저장하게끔 만들어라
+        plt.savefig(self.saveDirectory + '/stackchart.png')
 
     '''박스 플롯 저장'''
     def save_boxplot(self):
@@ -205,7 +206,7 @@ class Analyzer:
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
         sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette="Set2", hue="SECTION")
-        plt.savefig('../stackchart.png')  # TODO: 디렉토리에 저장하게끔 만들어라
+        plt.savefig(self.saveDirectory + '/stackchart.png')
 
     def save_heatmap(self,directory):
         flis = os.listdir(directory)
@@ -265,7 +266,7 @@ class Analyzer:
 
             sns.set(rc={'figure.figsize': (10, y_index / 10)})  # 출력 이미지 사이즈
             fig = sns.heatmap(arr, cbar=False, xticklabels=False, yticklabels=False).get_figure()
-            fig.savefig('C:/Users/이동우/Desktop/test' + str(camidx) + '.png', dpi=100)  # TODO 디렉토리에 저장
+            fig.savefig(self.saveDirectory + '/test' + str(camidx) + '.png', dpi=100)
 
 
     '''리포트 저장'''

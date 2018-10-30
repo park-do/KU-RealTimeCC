@@ -50,8 +50,11 @@ class FrameOne(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnGridAddButton, self.gridAddButton)
         self.csvAnalyzeButton = wx.Button(self.startPanel, label="CSV분석", pos=(290, 10), size=(80, 40))
         self.Bind(wx.EVT_BUTTON, self.OnCSVAnalyzeButton, self.csvAnalyzeButton)
+        self.startPanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftMouseButtonDown)
+        self.startPanel.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
         # self.Bind(wx.EVT_PAINT, self.onPaint)
         self.imageCtrl = None
+        self.bgImageCtrl = None
         self.Show(True)
 
         self.startPanel.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -65,7 +68,8 @@ class FrameOne(wx.Frame):
         # if self.bmp:
         if len(self.cameraList) > 0:
             nowCam = self.cameraList[self.nowCamIndex]
-            wx.BufferedPaintDC(self.imageCtrl, nowCam.nowBitmap)
+            bdc = wx.BufferedPaintDC(self.startPanel, nowCam.nowBitmap)
+            # bdc.DrawBitmap(nowCam.nowBitmap, 10, 100)
 
             evt.Skip()
 
@@ -110,11 +114,6 @@ class FrameOne(wx.Frame):
             if self.imageCtrl is None:
                 _, bitmap = self.d.getcamimage(camip=self.nowCamIP, size=camsize)
 
-                # 처음으로 불러온것이면 get com image에서 찾아온 첫 프레임을 넣어둡니다.
-                self.imageCtrl = wx.StaticBitmap(self.startPanel, wx.ID_ANY, bitmap, pos=(10, 100))
-                self.imageCtrl.Bind(wx.EVT_LEFT_DOWN, self.OnLeftMouseButtonDown)
-                self.imageCtrl.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
-
                 # 처음으로 버튼을 누른 후 미리보기 스레드가 돌아갑니다.
                 self.previewThread = Thread(target=self.PreviewThreading, args=(self.imageCtrl, ))
                 self.previewThread.start()
@@ -130,8 +129,11 @@ class FrameOne(wx.Frame):
         self.a.to_csv()  # df.to_csv('../test.csv')
 
     def OnStartButton(self, e):
+        timeStamp = str(datetime.now())
         for camera in self.cameraList:
             camera.isDetecting = True
+            camera.isReady = False
+            camera.timeStamp = timeStamp
 
         self.startButton.Show(False)
         self.camAddButton.Show(False)
@@ -142,7 +144,10 @@ class FrameOne(wx.Frame):
 
     def OnLeftMouseButtonDown(self, mouseEvent : wx.MouseEvent):
         camera = self.cameraList[self.nowCamIndex]
-        self.gridIndex, self.dotIndex = camera.GrapDot(mouseEvent.GetPosition())
+        mousePos = mouseEvent.GetPosition()
+        mousePos[0] -= 10
+        mousePos[1] -= 100
+        self.gridIndex, self.dotIndex = camera.GrapDot(mousePos)
         print((self.gridIndex, self.dotIndex))
 
 
@@ -150,10 +155,12 @@ class FrameOne(wx.Frame):
         print("Up : " + str(mouseEvent.GetPosition()))
         # 이전 Down에서 맞는 grid 점을 찾았을 경우
         if self.gridIndex != -1 and self.dotIndex != -1:
+            # 위치조정
+            mousePos = mouseEvent.GetPosition()
+            mousePos[0] -= 10
+            mousePos[1] -= 100
             # DOT 세팅해주고
-            self.cameraList[self.nowCamIndex].gridList[self.gridIndex].setDot(self.dotIndex, mouseEvent.GetPosition())
-            # 리프레시
-            # self.RefreshPreview()
+            self.cameraList[self.nowCamIndex].gridList[self.gridIndex].setDot(self.dotIndex, mousePos)
 
         self.gridIndex = self.dotIndex = -1
 
@@ -198,8 +205,21 @@ class FrameOne(wx.Frame):
         while True:
             nowCam = self.cameraList[self.nowCamIndex]
             if nowCam.nowBitmap is not None:
-                imageCtrl.Bitmap = nowCam.nowBitmap
-            self.Refresh(eraseBackground=False)
+                dc = wx.ClientDC(self.startPanel)
+                dc.DrawBitmap(nowCam.nowBitmap, 10, 100)
+
+            detectStart = True
+            for cam in self.cameraList:
+                if cam.isReady is False:
+                    detectStart = False
+                    break
+            if detectStart is True:
+                timeStamp = str(datetime.now())
+                timeStamp = timeStamp[:timeStamp.find('.')].replace(":", " ").replace("-", " ")
+                for cam in self.cameraList:
+                    cam.isReady = False
+                    cam.timeStamp = timeStamp
+
             sleep(0.1)
 
         # self.a.df.to_csv('../test.csv')

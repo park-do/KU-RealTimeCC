@@ -7,6 +7,7 @@ import ast  # 데이터 프레임을 읽어서 스트링을 튜플로 만들 때
 from datetime import datetime
 from dateutil.parser import parse
 import os
+from PIL import Image, ImageDraw
 
 
 class Analyzer:
@@ -103,7 +104,7 @@ class Analyzer:
             lis.append(datetime.fromtimestamp(tmpt).strftime(strfmt))
 
         df2['TIMEINDEX'] = lis
-        self.df2 = df2.groupby(['TIMEINDEX', 'GRIDINDEX']).agg({'COUNT': 'sum'}).reset_index()
+        self.df2 = df2.groupby(['TIMEINDEX', 'GRIDINDEX']).agg({'COUNT': 'mean'}).reset_index()
 
     '''라인차트 저장'''
     def save_linechart(self):
@@ -215,6 +216,12 @@ class Analyzer:
         csvlis = [s for s in flis if s.find('.csv') > 0]  # csv 중
         csvlis = [s for s in csvlis if s.find('grid') < 0]  # 그리드가 아닌거
 
+        # griddf의 포지션을 튜플로
+        lis = []
+        for i in griddf.POSITION:
+            lis.append(ast.literal_eval(i))
+        griddf.POSITION = lis
+
         # camdf 설정
         camdf = griddf[['CAMID', 'CAMSIZE']].drop_duplicates()
         camlis = camdf.CAMID.unique().tolist()
@@ -264,22 +271,52 @@ class Analyzer:
                                 continue
                             arr[i][j] += 1
 
-            sns.set(rc={'figure.figsize': (10, y_index / 10)})  # 출력 이미지 사이즈
+            sns.set(rc={'figure.figsize': (r_x/100, r_y/100)})  # 출력 이미지 사이즈
             fig = sns.heatmap(arr, cbar=False, xticklabels=False, yticklabels=False).get_figure()
-            fig.savefig(self.saveDirectory + '/test' + str(camidx) + '.png', dpi=100)
+            plt.tight_layout()
+            fig.savefig(self.saveDirectory + '/heatmap' + str(camidx) + '.png', dpi=100)
+
+        # Grid 영역 그리기
+        camid = griddf.CAMID.unique().tolist()
+        for i in camid:  # camID만큼 반복
+            image = Image.open(directory + 'heatmap' + str(i) + '.png')
+            draw = ImageDraw.Draw(image)
+            gridid = griddf[griddf['CAMID'] == i]['GRIDID'].unique().tolist()
+            for j in gridid: #  gridID 만큼 반복
+                dotList = []
+                pdf = griddf[griddf['GRIDID'] == j]['POSITION'].apply(pd.Series)  # position 만을 담은 데이터프레임
+                pdf.columns = ['X', 'Y', 'W', 'H']  # 튜플을 데이터 프레임으로
+                # 1번 점
+                dotList.append([pdf['X'].iloc[0] - pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] - pdf['H'].iloc[0] / 2])
+                # 2번 점
+                dotList.append([pdf['X'].iloc[0] + pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] - pdf['H'].iloc[0] / 2])
+                # 3번 점
+                dotList.append([pdf['X'].iloc[0] + pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
+                # 4번 점
+                dotList.append([pdf['X'].iloc[0] - pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
+                # 라인 그리기
+                for k in range(0, len(dotList) - 1):
+                    draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]), 'red', 2)
+                # 닫아주기
+                draw.line((dotList[0][0], dotList[0][1], dotList[len(dotList) - 1][0], dotList[len(dotList) - 1][1]),
+                          'red', 2)
+
+            image.save(self.saveDirectory + '/heatmap' + str(i) + '.png')
+
 
 
     '''리포트 저장'''
     def save_report(self):
-        reprot = ''
+        report = []
         df3 = self.df2.pivot_table(index='TIMEINDEX', columns='GRIDINDEX', aggfunc=np.mean)
         df3['SUM'] = df3.sum(axis=1)
         df3.columns = df3.columns.levels[1].tolist()
 
         '''##########################그리드 별 혼잡한 시간, 한적한 시간 찾기##########################'''
+        txt = ''
         for i in df3.columns.tolist()[:-1]:
-            print(i, "혼잡", df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0])  # 0번 섹션의 최고 혼잡 시간 찾기
-            print(i, "한적", df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0])  # 0번 섹션의 최고 한적 시간 찾기
+            txt += i, "혼잡", df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0] + '\n'  # 0번 섹션의 최고 혼잡 시간 찾기
+            txt += i, "한적", df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0] + '\n'  # 0번 섹션의 최고 한적 시간 찾기
         '''
         출력예제:
         00 혼잡 18-10-29 04:45:14
@@ -288,8 +325,10 @@ class Analyzer:
         01 한적 18-10-29 04:48:01
         02 혼잡 18-10-29 04:47:42
         '''
+        report.append(txt)
 
         '''##########################가장 혼잡한 지역은? 그리고 비율은?##########################'''
+        txt = ''
         df4 = df3.mean(axis=0).to_frame().reset_index()  # 함계행만 데이터 프레임으로
         df4.rename(columns={0: 'COUNT', 'index': 'GRIDINDEX'}, inplace=True)
         df4.iloc[-1, 0] = 'SUM'
@@ -297,29 +336,32 @@ class Analyzer:
 
         tmp = df4.loc['SUM', 'COUNT']
         for i in df4.index[:-1]:
-            print(i, "번 구역에", df4.loc[i].COUNT / tmp, "%")
-
+            txt += i, "번 구역에", df4.loc[i].COUNT / tmp, "%\n"
         '''
         출력예제:
         00 번 구역에 0.14318618042226486 %
         01 번 구역에 0.12399232245681382 %
         02 번 구역에 0.10978886756238003 %
         '''
+        report.append(txt)
+
         tmplis = []
         for i in df4.index[:-1]:
             if i[-1:] != '0':
                 tmplis.append(i)
-
-        print("가장 혼잡한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].max().COUNT].index[0], "입니다.")
-        print("가장 한적한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].min().COUNT].index[0], "입니다.")
-
+        txt = ''
+        txt += "가장 혼잡한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].max().COUNT].index[0], "입니다.\n"
+        txt += "가장 한적한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].min().COUNT].index[0], "입니다.\n"
         '''
         출력예제:
         가장 혼잡한 구역은 01 입니다.
         가장 한적한 구역은 11 입니다.
         '''
+        report.append(txt)
 
         '''##########################스케쥴링##########################'''
+        txt = ''
+
         df5 = df3.copy()
         for c in range(len(df5.columns)):  # 컬럼
             for r in range(len(df5)):  # 로우
@@ -334,7 +376,7 @@ class Analyzer:
 
         for r in range(len(df5) - gridlen):  # 로우 수 만큼 반복
             tmpdf = df5.iloc[r:r + gridlen, 1:-1]
-            print(tmpdf.index[0], "시간에 방문시")
+            txt += tmpdf.index[0], "시간에 방문시"
             reslis = []
             for i in range(gridlen):
                 tmp = tmpdf.iloc[i] == tmpdf.iloc[i].min()  # i 번째 행에서 최소값
@@ -342,8 +384,8 @@ class Analyzer:
                 tmpdf.loc[:, minc] = 1  # 방문한 컬럼은 1로 최대화 해버림
                 reslis.append(minc)
             for i in reslis:
-                print(i, "영역 →", end=" ")
-            print("순으로 방문 하시는 게 좋습니다.\n")
+                txt += i, "영역 → "
+                txt += "순으로 방문 하시는 게 좋습니다.\n"
         '''
         출력예제:
         18-10-29 04:41:52 시간에 방문시
@@ -353,3 +395,5 @@ class Analyzer:
         11 영역 → 02 영역 → 12 영역 → 02 영역 → 순으로 방문 하시는 게 좋습니다.
 
         '''
+        report.append(txt)
+        print(txt)

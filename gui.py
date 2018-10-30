@@ -7,6 +7,7 @@ import detectgrid
 from datetime import datetime
 import time
 import cccamera
+import analyzer
 from typing import List
 
 class FrameOne(wx.Frame):
@@ -15,46 +16,44 @@ class FrameOne(wx.Frame):
     def __init__(self, parent, d, a):
         """생성자"""
         self.d = d  # 다크넷 객체 받음
-        self.a = a  # 애널라이저 객체 받음
+        self.a: analyzer.Analyzer = a  # 애널라이저 객체 받음
         title = "프레임1"
         self.cameraList: List[cccamera.CCCamera] = []   # 카메라 리스트
         # self.nowCamIP = -1                            # 현재 처리중인 Cam의 IP
         self.nowCamIndex = 0                            # 현재 처리중인 Cam의 Index
         self.gridIndex = self.dotIndex = -1             # 그리드 이동용 변수들
+        self.previewThread: Thread = None                # 미리보기 스레드
 
         title = "RealTimeCC"
-
-        # self.gridList["00"] = detectgrid.DetectGrid()
-        # # self.gridList["00"].addRect([600, 300, 800, 400]) # 새로운 영상
-        # self.gridList["00"].addRect([8, 338, 302, 490])
-        # self.gridList["01"] = detectgrid.DetectGrid()
-        # # self.gridList["01"].addRect([600, 420, 800, 530]) # 새로운 영상
-        # self.gridList["01"].addRect([376, 284, 586, 394])
-        #
-        # self.gridList["10"] = detectgrid.DetectGrid()
-        # self.gridList["10"].addRect([70, 354, 255, 539])
-        # self.gridList["11"] = detectgrid.DetectGrid()
-        # self.gridList["11"].addRect([173, 250, 292, 340])
 
         app = wx.App(False)  # wx 초기화
         wx.Frame.__init__(self, parent, title=title, size=(1100, 700))  # 사이즈에 -1 넣으면 기본값 나옴
         self.startPanel = wx.Panel(self)
         # self.inputtext = wx.TextCtrl(self.startPanel, -1, "Cam ip or number", pos=(10, 300), size=(450, 60))
-        self.camAddButton = wx.Button(self.startPanel, label="캠 추가", pos=(10, 10), size=(60, 40))
+        buttonX = 10
+        self.camAddButton = wx.Button(self.startPanel, label="캠 추가", pos=(buttonX, 10), size=(60, 40))
         self.Bind(wx.EVT_BUTTON, self.onAddButton, self.camAddButton)
-        self.startButton= wx.Button(self.startPanel, label="시작", pos=(70, 10), size=(60, 40))
-        self.Bind(wx.EVT_BUTTON, self.OnStartButton, self.startButton)
-        self.saveButton = wx.Button(self.startPanel, label="저장", pos=(130, 10), size=(60, 40))
-        self.Bind(wx.EVT_BUTTON, self.OnSaveButton, self.saveButton)
-        self.gridAddButton = wx.Button(self.startPanel, label="그리드추가", pos=(190, 10), size=(100, 40))
+        buttonX += 60
+        self.gridAddButton = wx.Button(self.startPanel, label="그리드추가", pos=(buttonX, 10), size=(100, 40))
         self.Bind(wx.EVT_BUTTON, self.OnGridAddButton, self.gridAddButton)
-        self.csvAnalyzeButton = wx.Button(self.startPanel, label="CSV분석", pos=(290, 10), size=(80, 40))
+        buttonX += 100
+        self.startButton = wx.Button(self.startPanel, label="시작", pos=(buttonX, 10), size=(60, 40))
+        self.Bind(wx.EVT_BUTTON, self.OnStartButton, self.startButton)
+        self.endButton = wx.Button(self.startPanel, label="끝내기", pos=(buttonX, 10), size=(60, 40))
+        self.Bind(wx.EVT_BUTTON, self.OnEndButton, self.endButton)
+        self.endButton.Show(False)  # 시작과 끝은 같은 곳에 놓고 필요할때 전환
+        buttonX += 60
+        self.csvTempSaveButton = wx.Button(self.startPanel, label="CSV임시저장", pos=(buttonX, 10), size=(100, 40))
+        self.Bind(wx.EVT_BUTTON, self.OnSaveButton, self.csvTempSaveButton)
+        buttonX += 100
+        self.csvAnalyzeButton = wx.Button(self.startPanel, label="CSV분석", pos=(buttonX, 10), size=(80, 40))
         self.Bind(wx.EVT_BUTTON, self.OnCSVAnalyzeButton, self.csvAnalyzeButton)
+        buttonX += 60
+
         self.startPanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftMouseButtonDown)
         self.startPanel.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
         # self.Bind(wx.EVT_PAINT, self.onPaint)
         self.imageCtrl = None
-        self.bgImageCtrl = None
         self.Show(True)
 
         self.startPanel.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -63,15 +62,6 @@ class FrameOne(wx.Frame):
     def OnEraseBackground(self, evt):
         #dc = evt.GetDC()
         evt.Skip()
-
-    def onPaint(self, evt):
-        # if self.bmp:
-        if len(self.cameraList) > 0:
-            nowCam = self.cameraList[self.nowCamIndex]
-            bdc = wx.BufferedPaintDC(self.startPanel, nowCam.nowBitmap)
-            # bdc.DrawBitmap(nowCam.nowBitmap, 10, 100)
-
-            evt.Skip()
 
     def onAddButton(self, e):
         # wx.BitmapFromImage(self.detector.getcamimage(1))
@@ -139,8 +129,22 @@ class FrameOne(wx.Frame):
         self.camAddButton.Show(False)
         self.gridAddButton.Show(False)
         self.csvAnalyzeButton.Show(False)
+        self.endButton.Show(True)
 
         self.a.grid_to_csv(self.cameraList)
+
+    def OnEndButton(self, e):
+        for camera in self.cameraList:
+            camera.StopCam()
+        self.previewEnd = True
+
+        self.a.to_csv()
+
+        self.a.read_directory(self.a.saveDirectory+"/")
+        self.a.save_boxplot()
+        self.a.save_linechart()
+        self.a.save_stackchart()
+        self.a.save_heatmap(self.a.saveDirectory+"/")
 
     def OnLeftMouseButtonDown(self, mouseEvent : wx.MouseEvent):
         camera = self.cameraList[self.nowCamIndex]
@@ -174,7 +178,13 @@ class FrameOne(wx.Frame):
         dlg = wx.DirDialog(self, 'Enter Csv path', 'CSV PATH', wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
-            # TODO: ANALYZE with the CVSs.
+            self.a.saveDirectory = path
+            self.a.read_directory(self.a.saveDirectory + "/")
+            self.a.save_boxplot()
+            self.a.save_linechart()
+            self.a.save_stackchart()
+            self.a.save_heatmap(self.a.saveDirectory + "/")
+            # self.a.save_report()
             print("DO SOMETHING with : " + path)
 
 
@@ -201,7 +211,7 @@ class FrameOne(wx.Frame):
     # 미리보기 화면
     def PreviewThreading(self, imageCtrl: wx.Bitmap):
         # 루프
-
+        self.previewEnd = False
         while True:
             nowCam = self.cameraList[self.nowCamIndex]
             if nowCam.nowBitmap is not None:
@@ -215,13 +225,14 @@ class FrameOne(wx.Frame):
                     break
             if detectStart is True:
                 timeStamp = str(datetime.now())
-                timeStamp = timeStamp[:timeStamp.find('.')].replace(":", " ").replace("-", " ")
+                # timeStamp = timeStamp[:timeStamp.find('.')].replace(":", " ").replace("-", " ")
                 for cam in self.cameraList:
                     cam.isReady = False
                     cam.timeStamp = timeStamp
 
-            sleep(0.1)
-
+            sleep(0.001)
+            if self.previewEnd:
+                break
         # self.a.df.to_csv('../test.csv')
         # self.a.save_heatmap(camSize[0], camSize[1])
 

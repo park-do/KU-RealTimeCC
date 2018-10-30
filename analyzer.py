@@ -10,9 +10,8 @@ import os
 
 
 class Analyzer:
-    df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
-    df2 = pd.DataFrame()  # 분석용 데이터 프레임
-
+    # df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
+    # df2 = pd.DataFrame()  # 분석용 데이터 프레임
     '''생성자'''
     def __init__(self):
         self.df = pd.DataFrame(columns=['OBJECT', 'ACCURACY', 'POSITION', 'GRIDINDEX', 'TIME'])
@@ -209,7 +208,6 @@ class Analyzer:
         plt.savefig('../stackchart.png')  # TODO: 디렉토리에 저장하게끔 만들어라
 
     def save_heatmap(self,directory):
-        #directory = 'C:/Users/이동우/Desktop/20181029 044118/'
         flis = os.listdir(directory)
         griddf = pd.read_csv(directory + 'grid.csv', engine='python', index_col=0)
 
@@ -226,6 +224,7 @@ class Analyzer:
 
         '''캠 개수만큼 반복'''
         for camidx in camlis:
+            print('cam',+ camidx, 'make heatmap')
             r_x = camdf[camdf['CAMID'] == camidx].CAMSIZE.tolist()[0][0]  # cam의 영상 너비
             r_y = camdf[camdf['CAMID'] == camidx].CAMSIZE.tolist()[0][1]  # cam의 영상 높이
 

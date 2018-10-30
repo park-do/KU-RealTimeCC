@@ -35,7 +35,7 @@ class Report:
         <body>
         '''
 
-        # TODO: 사진 집어넣고, 히트맵에도 그리드 그리기
+        # TODO: 사진 집어넣기
 
 
         # 히트맵
@@ -96,6 +96,6 @@ class Report:
         self.txt += '"/>'
 
     def to_report(self):
-        file = open('report.html','w')
+        file = open('report.html', 'w')
         file.write(self.txt)
         file.close()

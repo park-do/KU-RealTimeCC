@@ -44,8 +44,14 @@ class Analyzer:
         griddf = pd.DataFrame(columns=['CAMID', 'CAMSIZE', 'GRIDID', 'POSITION'])
         for camera in cameraList:
             for gridIndex in range(0, len(camera.gridList)):
+                xModify = camera.camsize[0] / 960
+                yModify = camera.camsize[1] / 560
                 dl = camera.gridList[gridIndex].dotList
-                row = (camera.camindex, tuple(camera.camsize), str(camera.camindex) + str(gridIndex+1), (((dl[0][0]+dl[2][0])/2, (dl[0][1]+dl[2][1])/2, dl[2][0]-dl[0][0], dl[2][1]-dl[0][1])))
+                row = (camera.camindex, tuple(camera.camsize), str(camera.camindex) + str(gridIndex+1),
+                       (((dl[0][0]+dl[2][0])/2 * xModify,
+                         (dl[0][1]+dl[2][1])/2 * yModify,
+                         dl[2][0]-dl[0][0] * xModify,
+                         dl[2][1]-dl[0][1] * yModify)))
                 griddf.loc[len(griddf)] = list(row)
 
 
@@ -207,7 +213,7 @@ class Analyzer:
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
         sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette="Set2", hue="SECTION")
-        plt.savefig(self.saveDirectory + '/stackchart.png')
+        plt.savefig(self.saveDirectory + '/boxplot.png')
 
     def save_heatmap(self,directory):
         flis = os.listdir(directory)

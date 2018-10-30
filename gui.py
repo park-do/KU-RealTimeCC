@@ -54,7 +54,6 @@ class FrameOne(wx.Frame):
         self.startPanel.Bind(wx.EVT_LEFT_UP, self.OnLeftMouseButtonUp)
         # self.Bind(wx.EVT_PAINT, self.onPaint)
         self.imageCtrl = None
-        self.bgImageCtrl = None
         self.Show(True)
 
         self.startPanel.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -63,15 +62,6 @@ class FrameOne(wx.Frame):
     def OnEraseBackground(self, evt):
         #dc = evt.GetDC()
         evt.Skip()
-
-    def onPaint(self, evt):
-        # if self.bmp:
-        if len(self.cameraList) > 0:
-            nowCam = self.cameraList[self.nowCamIndex]
-            bdc = wx.BufferedPaintDC(self.startPanel, nowCam.nowBitmap)
-            # bdc.DrawBitmap(nowCam.nowBitmap, 10, 100)
-
-            evt.Skip()
 
     def onAddButton(self, e):
         # wx.BitmapFromImage(self.detector.getcamimage(1))

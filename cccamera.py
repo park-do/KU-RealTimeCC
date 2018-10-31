@@ -10,10 +10,11 @@ from datetime import datetime
 import analyzer
 from time import sleep
 import wx
+from typing import List
 
 class CCCamera:
     def __init__(self):
-        self.gridList: detectgrid.detectgrid = []
+        self.gridList: List[detectgrid.detectgrid] = []
         self.camip = ""
         self.camindex = 0
         self.camsize = (10,10)
@@ -23,6 +24,7 @@ class CCCamera:
         self.timeStamp = ""
         self.camThread: Thread = None
         self.isEnd = False
+        self.isSaved = False
 
     def AddGrid(self):
         grid = detectgrid.detectgrid()
@@ -63,7 +65,7 @@ class CCCamera:
             now = str(datetime.now())
             detection_list = []
             analyze_list = []
-            term = 10
+            term = 0
 
             t0 = time.clock()
             if self.isDetecting is True:
@@ -72,7 +74,7 @@ class CCCamera:
                 t0 = time.clock()
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
-                term = 5.00
+                term = 0.001
                 _, bitmap = detector.getcamimage(self.camip, size=size)
 
                 if bitmap is None:
@@ -89,14 +91,7 @@ class CCCamera:
 
             gridIndex = 0
             for checkingGrid in self.gridList:
-                color = "#ff0000"
-                if gridIndex == 1:
-                    color = "blue"
-                if gridIndex == 2:
-                    color = "green"
-                if gridIndex == 3:
-                    color = "yellow"
-                gridImage = checkingGrid.drawGrid(gridImage, color)
+                gridImage = checkingGrid.drawGrid(gridImage)
 
                 gridIndex += 1
 
@@ -149,6 +144,7 @@ class CCCamera:
                 analyzerInst.add_row(analyze_list)
             analyzerInst.after_add_row()
             self.nowBitmap = imageutility.PIL2wx(gridImage)
+
             # imageCtrl.Bitmap = bitmap
             print(time.clock() - t0)
             sleeptime = term - (time.clock() - t0)
@@ -156,6 +152,9 @@ class CCCamera:
                 sleep(sleeptime)
 
             if self.isDetecting is True:
+                if self.isSaved is False:
+                    self.isSaved = True
+                    gridImage.save(analyzerInst.saveDirectory+"/cam"+str(self.camindex)+".png")
                 self.isReady = True
 
 

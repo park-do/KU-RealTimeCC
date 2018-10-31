@@ -3,7 +3,7 @@ import os
 class Report:
     def __init__(self, directory, txtlis):
         self.txt = ''
-        self.directory = directory
+        self.directory = directory + '/'
         self.txtlis = txtlis
 
     def make_html(self):
@@ -41,7 +41,7 @@ class Report:
         # TODO: 사진 집어넣기
 
         for fname in cam:
-            self.place_image(fname)
+            self.place_img(fname)
         self.txt += '<br/>'
 
         # 히트맵
@@ -100,14 +100,16 @@ class Report:
         '''
         self.to_report()
 
-        self.to_report()
-
     def place_img(self, filename):
         self.txt += '<img src="'
         self.txt += self.directory + filename
         self.txt += '"/>'
 
     def to_report(self):
-        file = open('report.html', 'w')
+        file = open(self.directory + 'report.html', 'w')
         file.write(self.txt)
         file.close()
+
+        os.startfile('report.html')
+
+

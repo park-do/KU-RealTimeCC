@@ -69,18 +69,21 @@ class Report:
             self.place_img(fname)
         self.txt += '<br/>'
         self.txt += self.txtlis[2] + '<p/>'
+        self.txt += self.txtlis[3] + '<p/>'
         '''
         출력예제:
         가장 혼잡한 구역은 01 입니다.
         가장 한적한 구역은 11 입니다.
+        01 영역의 평균인원은 2.675 표준편차는 0.503
+        02 영역의 평균인원은 2.388 표준편차는 0.915
         '''
 
         # TODO: 셀렉트박스로 만들기
         # 스케쥴링
-        self.txt += '<select>'
+        self.txt += '<select id ="schedule" onchange="changeSchedule()">'
         # for in range():
         self.txt += '<option>'
-        self.txt += self.txtlis[3]
+        self.txt += self.txtlis[4]
         self.txt += '</option>'
         self.txt += '<div id="sch">'
         self.txt += '</div>'
@@ -89,6 +92,7 @@ class Report:
         </body>
         </html>
         '''
+        self.to_report()
 
     def place_img(self, filename):
         self.txt += '<img src="'

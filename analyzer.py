@@ -349,7 +349,7 @@ class Analyzer:
 
     '''리포트 저장'''
     def save_report(self):
-        report = []
+        txtlis = []
         df3 = self.df2.pivot_table(index='TIMEINDEX', columns='GRIDINDEX', aggfunc=np.mean)
         df3['SUM'] = df3.sum(axis=1)
         df3.columns = df3.columns.levels[1].tolist()
@@ -357,8 +357,8 @@ class Analyzer:
         '''##########################그리드 별 혼잡한 시간, 한적한 시간 찾기##########################'''
         txt = ''
         for i in df3.columns.tolist()[:-1]:
-            txt += i, "혼잡", df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0] + '\n'  # 0번 섹션의 최고 혼잡 시간 찾기
-            txt += i, "한적", df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0] + '\n'  # 0번 섹션의 최고 한적 시간 찾기
+            txt += str(i) + " 혼잡 " + df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0] + '\n'  # 0번 섹션의 최고 혼잡 시간 찾기
+            txt += str(i) + " 한적 " + df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0] + '\n'  # 0번 섹션의 최고 한적 시간 찾기
         '''
         출력예제:
         00 혼잡 18-10-29 04:45:14
@@ -367,7 +367,7 @@ class Analyzer:
         01 한적 18-10-29 04:48:01
         02 혼잡 18-10-29 04:47:42
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         '''##########################가장 혼잡한 지역은? 그리고 비율은?##########################'''
         txt = ''
@@ -378,34 +378,34 @@ class Analyzer:
 
         tmp = df4.loc['SUM', 'COUNT']
         for i in df4.index[:-1]:
-            txt += i, "번 구역에", df4.loc[i].COUNT / tmp, "%\n"
+            txt += str(i) + "번 구역에 " + str(df4.loc[i].COUNT / tmp) + "%\n"
         '''
         출력예제:
         00 번 구역에 0.14318618042226486 %
         01 번 구역에 0.12399232245681382 %
         02 번 구역에 0.10978886756238003 %
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         tmplis = []
         for i in df4.index[:-1]:
             if i[-1:] != '0':
                 tmplis.append(i)
         txt = ''
-        txt += "가장 혼잡한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].max().COUNT].index[0], "입니다.\n"
-        txt += "가장 한적한 구역은", df4[df4.COUNT == df4[df4.index.isin(tmplis)].min().COUNT].index[0], "입니다.\n"
+        txt += "가장 혼잡한 구역은 " + df4[df4.COUNT == df4[df4.index.isin(tmplis)].max().COUNT].index[0] + "입니다.\n"
+        txt += "가장 한적한 구역은 " + df4[df4.COUNT == df4[df4.index.isin(tmplis)].min().COUNT].index[0] + "입니다.\n"
         '''
         출력예제:
         가장 혼잡한 구역은 01 입니다.
         가장 한적한 구역은 11 입니다.
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         '''##########################평균 표준편차##########################'''
         txt = ''
         for i in tmplis:
-            txt += i, "영역의 평균인원은", round(df3[i].mean(), 3), "표준편차는", round(df3[i].std(), 3) + '\n'
-        report.append(txt)
+            txt += str(i) + "영역의 평균인원은 " + str(round(df3[i].mean(), 3)) + ", 표준편차는 " + str(round(df3[i].std(), 3)) + '\n'
+        txtlis.append(txt)
         '''
         출력예제:
         01 영역의 평균인원은 2.675 표준편차는 0.503
@@ -427,8 +427,8 @@ class Analyzer:
         gridlen = len(df5.columns) - 1  # 영역이 몇 개 있는 지
 
         for r in range(len(df5) - gridlen):  # 로우 수 만큼 반복
-            tmpdf = df5.iloc[r:r + gridlen, 1:-1]
-            txt += tmpdf.index[0], "시간에 방문시"
+            tmpdf = df5.iloc[r:r + gridlen, 0:-1]
+            txt += str(tmpdf.index[0]) + "시간에 방문시\n"
             reslis = []
             for i in range(gridlen):
                 tmp = tmpdf.iloc[i] == tmpdf.iloc[i].min()  # i 번째 행에서 최소값
@@ -436,8 +436,8 @@ class Analyzer:
                 tmpdf.loc[:, minc] = 1  # 방문한 컬럼은 1로 최대화 해버림
                 reslis.append(minc)
             for i in reslis:
-                txt += i, "영역 → "
-                txt += "순으로 방문 하시는 게 좋습니다.\n"
+                txt += str(i) + "영역 → "
+            txt += " 순으로 방문 하시는 게 좋습니다.\n\n"
         '''
         출력예제:
         18-10-29 04:41:52 시간에 방문시
@@ -447,5 +447,4 @@ class Analyzer:
         11 영역 → 02 영역 → 12 영역 → 02 영역 → 순으로 방문 하시는 게 좋습니다.
 
         '''
-        report.append(txt)
-        print(report)
+        txtlis.append(txt)

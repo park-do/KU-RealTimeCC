@@ -53,17 +53,25 @@ class Report:
         for fname in linechart:
             self.place_img(fname)
         self.txt += '<br/>'
-        self.txt += self.txtlis[0] + '<p/>'
+        linelis = self.txtlis[0].split('\n')
+        for lintxt in linelis:
+            lintxt = lintxt.replace("혼잡", "<font color='red'>혼잡</font>")
+            lintxt = lintxt.replace("한적", "<font color='blue'>한적</font>")
+            self.txt += lintxt + '<br>'
+        self.txt += '<p/>'
         '''
         00 혼잡 18-10-29 04:45:14
         00 한적 18-10-29 04:48:01
         '''
-        
+
         # 스택 차트
         for fname in stackchart:
             self.place_img(fname)
         self.txt += '<br/>'
-        self.txt += self.txtlis[1] + '<p/>'
+        stacklis = self.txtlis[1].split('\n')
+        for stacktxt in stacklis:
+            self.txt += stacktxt + '<br>'
+        self.txt += '<p/>'
         '''
         00 번 구역에 0.14318618042226486 %
         01 번 구역에 0.12399232245681382 %
@@ -74,8 +82,18 @@ class Report:
         for fname in boxplot:
             self.place_img(fname)
         self.txt += '<br/>'
-        self.txt += self.txtlis[2] + '<p/>'
-        self.txt += self.txtlis[3] + '<p/>'
+        boxsectionlis = self.txtlis[2].split('\n')
+        for boxsectiontxt in boxsectionlis:
+            self.txt += boxsectiontxt + '<br>'
+        self.txt += '<p/>'
+
+        avglis = self.txtlis[3].split('\n')
+        for avgtxt in avglis:
+            self.txt += avgtxt + '<br>'
+        self.txt += '<p/>'
+
+        # self.txt += self.txtlis[2].replace('\n', '<br/>') + '<p/>'
+        # self.txt += self.txtlis[3].replace('\n', '<br/>') + '<p/>'
         '''
         출력예제:
         가장 혼잡한 구역은 01 입니다.
@@ -84,6 +102,7 @@ class Report:
         02 영역의 평균인원은 2.388 표준편차는 0.915
         '''
 
+        # TODO: 셀렉트박스로 만들기
         # 스케쥴링
         schtxt = self.txtlis[4].split('\n\n')
         time_lis = []

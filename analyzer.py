@@ -77,6 +77,7 @@ class Analyzer:
 
     '''디렉토리 읽어서 초기화'''
     def read_directory(self, directory):
+        print('read directory called')
         flis = os.listdir(directory)
         csvlis = [s for s in flis if s.find('.csv') > 0]  # csv 중
         csvlis = [s for s in csvlis if s.find('grid') < 0]  # 그리드가 아닌거
@@ -96,6 +97,7 @@ class Analyzer:
             tmpdf.drop(columns='level_0', inplace=True)
             tmpdf.rename(columns={0: 'OBJECT'}, inplace=True)
             resdf = pd.concat([resdf, tmpdf])  # 합치기
+
         df2 = resdf.groupby(['TIME', 'GRIDINDEX']).agg({'OBJECT': 'sum'}).reset_index()
         df2.rename(columns={'OBJECT': 'COUNT'}, inplace=True)
 
@@ -112,18 +114,23 @@ class Analyzer:
 
         lis = []
         for t in df2.TIME:
-            tmpt = mint + int((parse(t).timestamp() - mint) / td) * td
+            tmp = int((parse(t).timestamp() - mint) / td)  # 20개 구간 중 몇 번째 구간이낙?
+            if tmp >= 20: tmp = 19  # 20을 넘어가면 그냥 19로
+            tmpt = mint + tmp * td
             lis.append(datetime.fromtimestamp(tmpt).strftime(strfmt))
-
         df2['TIMEINDEX'] = lis
+        tmpdf = df2.pivot_table(columns='TIMEINDEX', index='GRIDINDEX', aggfunc={'COUNT': 'mean'},
+                               fill_value=0).unstack().to_frame().reset_index()
+        tmpdf.rename(columns={0: 'COUNT'}, inplace=True)
         self.df2 = df2.groupby(['TIMEINDEX', 'GRIDINDEX']).agg({'COUNT': 'mean'}).reset_index()
+        print('read directory finished')
 
     '''라인차트 저장'''
     def save_linechart(self):
         # plt 설정
         fig, ax1 = plt.subplots()
         fig.set_size_inches(8, 8)
-        plt.title('Time series analysis')
+        ax1.set_title('Time series analysis')
 
         # x축 설정
         tmpdf = self.df2[self.df2['GRIDINDEX'] == '00']
@@ -132,7 +139,8 @@ class Analyzer:
         x = np.arange(y.shape[0])
         my_xticks = tmpdf.TIMEINDEX
         frequency = 2
-        plt.xticks(x[::frequency], my_xticks[::frequency])
+        #plt.xticks(x[::frequency], my_xticks[::frequency])
+        plt.xticks(x, my_xticks)
         plt.xticks(rotation=40)
 
         # 주 축
@@ -153,8 +161,8 @@ class Analyzer:
         ax2.legend(loc='upper right')
 
         fig.tight_layout()
-        plt.show()
         plt.savefig(self.saveDirectory + '/linechart.png')
+        print('save linechart finished')
 
     '''스택차트를 저장하는 함수'''
     def save_stackchart(self,param=0):
@@ -162,7 +170,7 @@ class Analyzer:
         # plt 설정
         fig, ax1 = plt.subplots()
         fig.set_size_inches(8, 8)
-        plt.title('Cumulative sum')
+        ax1.set_title('Cumulative sum')
 
         # x축 설정
         tmpdf = self.df2[self.df2['GRIDINDEX'] == '00']
@@ -170,8 +178,9 @@ class Analyzer:
 
         x = np.arange(y.shape[0])
         my_xticks = tmpdf.TIMEINDEX
-        frequency = 2
-        plt.xticks(x[::frequency], my_xticks[::frequency])
+        #frequency = 2
+        #plt.xticks(x[::frequency], my_xticks[::frequency])
+        plt.xticks(x, my_xticks)
         plt.xticks(rotation=40)
 
         # y축 설정
@@ -202,6 +211,8 @@ class Analyzer:
         ax1.set_ylabel('number of person')
         fig.tight_layout()
         plt.savefig(self.saveDirectory + '/stackchart.png')
+        ax1.remove()
+        print('save stackchart finished')
 
     '''박스 플롯 저장'''
     def save_boxplot(self):
@@ -220,6 +231,7 @@ class Analyzer:
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
         sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette="Set2", hue="SECTION")
         plt.savefig(self.saveDirectory + '/boxplot.png')
+        print('save boxplot finished')
 
     def save_heatmap(self,directory):
         flis = os.listdir(directory)
@@ -250,7 +262,7 @@ class Analyzer:
 
             x_index = 100
             y_index = int(r_y * x_index / r_x)  # x가 100일 때 y의 비율 계산
-            arr = [[0] * (y_index) for i in range(x_index)]  # 히트맵 표현용 2차원배열
+            arr = [[0] * (x_index) for i in range(y_index)]  # 히트맵 표현용 2차원배열
             x_scaler = MinMaxScaler(feature_range=(0, x_index - 1))  # 표준화 인스턴스
             y_scaler = MinMaxScaler(feature_range=(0, y_index - 1))
 
@@ -260,11 +272,15 @@ class Analyzer:
             '''csv 개수만큼 반복'''
             for name in csvlis:
                 df = pd.read_csv(directory + name, engine='python', index_col=0, dtype={'GRIDINDEX': str})
+                if len(df) <= 0:
+                    continue
                 lis = []
                 for i in df.POSITION:
                     lis.append(ast.literal_eval(i))
                 df['POSITION'] = lis
                 tmpdf = df[df['GRIDINDEX'].str[:1] == str(camlis[camidx])]
+                if len(tmpdf) <= 0:
+                    continue
 
                 pdf = tmpdf['POSITION'].apply(pd.Series)  # position 만을 담은 데이터프레임
                 pdf.columns = ['X', 'Y', 'W', 'H']  # 튜플을 데이터 프레임으로
@@ -279,13 +295,15 @@ class Analyzer:
                     row = row[1]  # 0은 인덱스, 1에 위치 데이터가 들어있음
                     for i in range(row['X'] - int(row['W'] / 2), row['X'] + int(row['W'] / 2)):
                         for j in range(row['Y'] - int(row['H'] / 2), row['Y'] + int(row['H'] / 2)):
-                            if i >= len(arr) or i < 0 or j >= len(arr[i]) or j < 0:
+                            if j >= len(arr) or j < 0 or i >= len(arr[j]) or i < 0:
                                 continue
-                            arr[i][j] += 1
+                            arr[j][i] += 1
 
-            sns.set(rc={'figure.figsize': (r_x/100, r_y/100)})  # 출력 이미지 사이즈
-            fig = sns.heatmap(arr, cbar=False, xticklabels=False, yticklabels=False).get_figure()
-            plt.tight_layout()
+
+            heatmap = sns.heatmap(arr, cbar=False, xticklabels=False, yticklabels=False)
+            fig = heatmap.get_figure()
+            fig.set_size_inches((r_x/100, r_y/100))
+            plt.tight_layout(0)
             fig.savefig(self.saveDirectory + '/heatmap' + str(camidx) + '.png', dpi=100)
 
         # Grid 영역 그리기
@@ -418,4 +436,4 @@ class Analyzer:
 
         '''
         report.append(txt)
-        print(txt)
+        print(report)

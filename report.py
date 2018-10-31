@@ -54,6 +54,7 @@ class Report:
                     }
                 }</script>
                 '''
+        # 스타일
         self.txt += '''
         <style>
             .center {
@@ -64,21 +65,39 @@ class Report:
         </style>
         </head>
         <body>
+        <h1>분석 리포트</h1>
         '''
 
         for fname in cam:
             self.place_img(fname)
         self.txt += '<br/>'
 
+        self.txt += '<h2> 설정된 영역 </h2><p/>'
+        # TODO: 캠 사진 필요
+
+        self.txt += '<h2> 히트맵 </h2><p/>'
         # 히트맵
         for fname in heatmap:
             self.place_img(fname, '640px')
         self.txt += '<br/>'
+        self.txt += '<h3> 밝을 수록 사람이 머문 시간이 깁니다.</h3><br/>'
+
+        boxsectionlis = self.txtlis[2].split('\n')
+        for boxsectiontxt in boxsectionlis:
+            self.txt += boxsectiontxt + '<br>'
+        self.txt += '<p/>'
+        '''
+        출력예제:
+        가장 혼잡한 구역은 01 입니다.
+        가장 한적한 구역은 11 입니다.
+        '''
 
         # 라인 차트
+        self.txt += '<h2> 라인차트 </h2><p/>'
         for fname in linechart:
             self.place_img(fname)
         self.txt += '<br/>'
+        self.txt += '<h3> 바차트는 전체인원, 라인차트는 영역별 인원을 나타냅니다. </h3><br/>'
         linelis = self.txtlis[0].split('\n')
         for lintxt in linelis:
             lintxt = lintxt.replace("혼잡", "<font color='red'>혼잡</font>")
@@ -91,9 +110,11 @@ class Report:
         '''
 
         # 스택 차트
+        self.txt += '<h2> 누적 라인차트 </h2><p/>'
         for fname in stackchart:
             self.place_img(fname)
         self.txt += '<br/>'
+        self.txt += '<h3> 그리드 영역과 나머지 영역의 인원차이를 볼 수 있습니다. </h3><br/>'
         stacklis = self.txtlis[1].split('\n')
         for stacktxt in stacklis:
             self.txt += stacktxt + '<br>'
@@ -104,13 +125,11 @@ class Report:
         '''
 
         # 박스플롯
+        self.txt += '<h2> 박스차트 </h2><p/>'
         for fname in boxplot:
             self.place_img(fname)
         self.txt += '<br/>'
-        boxsectionlis = self.txtlis[2].split('\n')
-        for boxsectiontxt in boxsectionlis:
-            self.txt += boxsectiontxt + '<br>'
-        self.txt += '<p/>'
+
 
         avglis = self.txtlis[3].split('\n')
         for avgtxt in avglis:
@@ -121,13 +140,11 @@ class Report:
         # self.txt += self.txtlis[3].replace('\n', '<br/>') + '<p/>'
         '''
         출력예제:
-        가장 혼잡한 구역은 01 입니다.
-        가장 한적한 구역은 11 입니다.
         01 영역의 평균인원은 2.675 표준편차는 0.503
         02 영역의 평균인원은 2.388 표준편차는 0.915
         '''
         # 스케쥴링
-        self.txt += '<h1> 방문 스케줄링 </h1><p/>'
+        self.txt += '<h2> 방문 스케줄링 </h2><p/>'
         # 셀렉트 박스 만들기
         self.txt += '\n<select id ="schedule" onchange="changeSchedule()">'
         sch_idx = 0
@@ -141,6 +158,7 @@ class Report:
         self.txt += '</div>'
 
         self.txt += '''
+        <p/><p/><p/><p/><p/><p/>
         </body>
         </html>
         '''

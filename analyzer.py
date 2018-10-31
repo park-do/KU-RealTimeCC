@@ -7,7 +7,7 @@ import ast  # 데이터 프레임을 읽어서 스트링을 튜플로 만들 때
 from datetime import datetime
 from dateutil.parser import parse
 import os
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from threading import Lock
 from typing import List
 
@@ -328,12 +328,13 @@ class Analyzer:
 
         # Grid 영역 그리기
         camid = griddf.CAMID.unique().tolist()
+
+        color_idx = 0 # 버그 수정
         for i in camid:  # camID만큼 반복
             image = Image.open(directory + 'heatmap' + str(i) + '.png')
             draw = ImageDraw.Draw(image)
             gridid = griddf[griddf['CAMID'] == i]['GRIDID'].unique().tolist()
             for j in gridid: #  gridID 만큼 반복
-                color_idx = 0
                 dotList = []
                 pdf = griddf[griddf['GRIDID'] == j]['POSITION'].apply(pd.Series)  # position 만을 담은 데이터프레임
                 pdf.columns = ['X', 'Y', 'W', 'H']  # 튜플을 데이터 프레임으로
@@ -345,6 +346,11 @@ class Analyzer:
                 dotList.append([pdf['X'].iloc[0] + pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
                 # 4번 점
                 dotList.append([pdf['X'].iloc[0] - pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
+
+                # 글씨 쓰기
+                fnt = ImageFont.truetype(font="malgun.ttf", size=40)
+                draw.text( ( pdf['X'].iloc[0], pdf['Y'].iloc[0] ), str(j), (255, 255, 255), font=fnt)
+
                 # 라인 그리기
                 for k in range(0, len(dotList) - 1):
                     draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]),
@@ -368,8 +374,8 @@ class Analyzer:
         '''##########################그리드 별 혼잡한 시간, 한적한 시간 찾기##########################'''
         txt = ''
         for i in df3.columns.tolist()[:-1]:
-            txt += str(i) + " 혼잡 " + df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0] + '\n'  # 0번 섹션의 최고 혼잡 시간 찾기
-            txt += str(i) + " 한적 " + df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0] + '\n'  # 0번 섹션의 최고 한적 시간 찾기
+            txt += str(i) + " 영역의 가장 혼잡한 시간: " + df3[df3.loc[:, i] == df3.loc[:, i].max()].index[0] + '\n'  # 0번 섹션의 최고 혼잡 시간 찾기
+            txt += str(i) + " 영역의 가장 한적한 시간: " + df3[df3.loc[:, i] == df3.loc[:, i].min()].index[0] + '\n'  # 0번 섹션의 최고 한적 시간 찾기
         '''
         출력예제:
         00 혼잡 18-10-29 04:45:14
@@ -389,7 +395,7 @@ class Analyzer:
 
         tmp = df4.loc['SUM', 'COUNT']
         for i in df4.index[:-1]:
-            txt += str(i) + "번 구역에 " + str(df4.loc[i].COUNT / tmp) + "%\n"
+            txt += str(i) + "번 구역에 " + str(round(df4.loc[i].COUNT / tmp * 100, 2)) + "%\n"  # 퍼센트로 수정
         '''
         출력예제:
         00 번 구역에 0.14318618042226486 %

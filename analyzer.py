@@ -145,10 +145,12 @@ class Analyzer:
 
         # 주 축
         ax1.set_ylabel('number of person in each section')
+        color_idx = 0
         for i in self.df2.GRIDINDEX.unique():
             if i[-1:] == '0': continue
             y = self.df2[self.df2['GRIDINDEX'] == i]['COUNT']
-            ax1.plot(x, y, alpha=1, label='section ' + i)
+            ax1.plot(x, y, alpha=1, label='section ' + i, c=colorList[color_idx])
+            color_idx += 1
 
         # 보조 축(전체)
 
@@ -187,17 +189,24 @@ class Analyzer:
         stacked_list = []
         cumsum_stacked_list = []
         labels = []
+        rest_lis = []
+        grid_lis = []
+        for s in self.df2.GRIDINDEX.unique():
+            if s[1:] == '0':
+                rest_lis.append(s)
+            else:
+                grid_lis.append(s)
         '''
         파라미터가 0이면 그냥 스택 차트
         파라미터가 0이 아니면 누계
         '''
         if param == 0:
-            for i in self.df2.GRIDINDEX.unique():
+            for i in grid_lis:
                 stacked_list.append(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 리스트로 만들어 스택드리스트에 저장
-                if i[-1:] != '0':
-                    labels.append('section ' + str(i))  # 레이블 저장
-                else:
-                    labels.append(str(i) + ' camera rest')
+                labels.append('section ' + str(i))
+            for i in rest_lis:
+                stacked_list.append(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 리스트로 만들어 스택드리스트에 저장
+                labels.append(str(i) + ' camera rest')
         else:
             for i in self.df2.GRIDINDEX.unique():
                 cumsum = np.cumsum(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 누계를 구함
@@ -229,7 +238,7 @@ class Analyzer:
         ax1.set_title('Box plot')
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
-        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette="Set2", hue="SECTION")
+        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION")
         plt.savefig(self.saveDirectory + '/boxplot.png')
         print('save boxplot finished')
 
@@ -313,6 +322,7 @@ class Analyzer:
             draw = ImageDraw.Draw(image)
             gridid = griddf[griddf['CAMID'] == i]['GRIDID'].unique().tolist()
             for j in gridid: #  gridID 만큼 반복
+                color_idx = 0
                 dotList = []
                 pdf = griddf[griddf['GRIDID'] == j]['POSITION'].apply(pd.Series)  # position 만을 담은 데이터프레임
                 pdf.columns = ['X', 'Y', 'W', 'H']  # 튜플을 데이터 프레임으로
@@ -326,10 +336,12 @@ class Analyzer:
                 dotList.append([pdf['X'].iloc[0] - pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
                 # 라인 그리기
                 for k in range(0, len(dotList) - 1):
-                    draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]), 'red', 2)
+                    draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]), 
+                              colorList[color_idx], 2)
                 # 닫아주기
                 draw.line((dotList[0][0], dotList[0][1], dotList[len(dotList) - 1][0], dotList[len(dotList) - 1][1]),
-                          'red', 2)
+                          colorList[color_idx], 2)
+                color_idx += 1
 
             image.save(self.saveDirectory + '/heatmap' + str(i) + '.png')
 

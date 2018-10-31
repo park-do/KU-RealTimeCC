@@ -92,7 +92,7 @@ class Report:
 
     def place_img(self, filename):
         self.txt += '<img src="'
-        self.txt += filename
+        self.txt += self.directory + filename
         self.txt += '"/>'
 
     def to_report(self):

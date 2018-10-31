@@ -439,7 +439,7 @@ class Analyzer:
 
         for r in range(len(df5) - gridlen):  # 로우 수 만큼 반복
             tmpdf = df5.iloc[r:r + gridlen, 0:-1]
-            txt += str(tmpdf.index[0]) + "시간에 방문시\n"
+            txt += str(tmpdf.index[0]) + "\t시간에 방문시\n"
             reslis = []
             for i in range(gridlen):
                 tmp = tmpdf.iloc[i] == tmpdf.iloc[i].min()  # i 번째 행에서 최소값

@@ -28,11 +28,11 @@ class Report:
                 cam.append(fname)
 
         self.txt = '''
-        <html>
+        <!DOCTYPE html>
+        <html lang="en"> 
         <head>
+        <meta charset="utf-8"/>
         '''
-        # TODO: 셀렉트 박스 스크립트
-
         self.txt = '''
         </head>
         <body>
@@ -84,13 +84,37 @@ class Report:
         02 영역의 평균인원은 2.388 표준편차는 0.915
         '''
 
-        # TODO: 셀렉트박스로 만들기
         # 스케쥴링
+        schtxt = self.txtlis[4].split('\n\n')
+        time_lis = []
+        sch_lis = []
+        for s in schtxt:
+            if s == '':
+                break
+            time_lis.append(s.split('\t')[0])
+            sch_lis.append(s.split('\t')[1])
+
+        # 스크립트
+        self.txt += '<script>'
+        '''
+        function changeSchedule(){
+            var select = document.getElementById("schedule");
+            switch(select){'''
+        for i in range(len(sch_lis)):
+            self.txt += 'case ' + str(i) +':'
+            self.txt += 'document.getElementById("sch").innerHTML = "' + sch_lis[i] + '"; break;'
+        self.txt +='''
+            }
+        }</script>
+        '''
+        # 셀렉트 박스 만들기
         self.txt += '<select id ="schedule" onchange="changeSchedule()">'
-        # for in range():
-        self.txt += '<option>'
-        self.txt += self.txtlis[4]
-        self.txt += '</option>'
+        sch_idx = 0
+        for s in time_lis:
+            self.txt += '<option ="' + str(sch_idx) + '">'
+            self.txt += s
+            self.txt += '</option>'
+            sch_idx += 1
         self.txt += '<div id="sch">'
         self.txt += '</div>'
 

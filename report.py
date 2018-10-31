@@ -110,6 +110,6 @@ class Report:
         file.write(self.txt)
         file.close()
 
-        os.startfile('report.html')
+        os.startfile(self.directory + 'report.html')
 
 

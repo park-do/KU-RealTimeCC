@@ -9,6 +9,37 @@ import time
 import cccamera
 import analyzer
 from typing import List
+from wx.lib.pubsub import pub
+
+
+
+class ProgressDialog(wx.Dialog):
+    """"""
+
+    # ----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        wx.Dialog.__init__(self, None, title="Progress")
+        self.Size = (300, 200)
+        self.panel = wx.Panel(self, size=(100, 70))
+        self.progress = wx.Gauge(self.panel, range=100, pos=(0, 50))
+        self.text = wx.StaticText(self.panel, size=(100, 30), pos=(0, 20))
+
+
+        # create a pubsub listener
+        pub.subscribe(self.updateProgress, "update")
+
+    # ----------------------------------------------------------------------
+    def updateProgress(self, number, msg):
+        """
+        Update the progress bar
+        """
+
+        if number >= 100:
+            self.Destroy()
+        self.text.LabelText = msg
+        self.progress.SetValue(number)
+
 
 class FrameOne(wx.Frame):
     """분석 시작 버튼이 있는 프레임"""
@@ -138,13 +169,14 @@ class FrameOne(wx.Frame):
             camera.StopCam()
         self.previewEnd = True
 
-        self.a.to_csv()
+        # 모든 스레드가 멈춘 후에 분석 시작
+        self.previewThread.join()
+        for camera in self.cameraList:
+            camera.camThread.join()
 
-        self.a.read_directory(self.a.saveDirectory+"/")
-        self.a.save_boxplot()
-        self.a.save_linechart()
-        self.a.save_stackchart()
-        self.a.save_heatmap(self.a.saveDirectory+"/")
+        self.a.to_csv()
+        self.AnalyzeProcess()
+
 
     def OnLeftMouseButtonDown(self, mouseEvent : wx.MouseEvent):
         camera = self.cameraList[self.nowCamIndex]
@@ -179,14 +211,35 @@ class FrameOne(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.a.saveDirectory = path
-            self.a.read_directory(self.a.saveDirectory + "/")
-            self.a.save_boxplot()
-            self.a.save_linechart()
-            self.a.save_stackchart()
-            self.a.save_heatmap(self.a.saveDirectory + "/")
-            # self.a.save_report()
-            print("DO SOMETHING with : " + path)
+            self.AnalyzeProcess()
+            # print("DO SOMETHING with : " + path)
 
+    def AnalyzeProcess(self):
+
+        dlg = ProgressDialog()
+        dlg.Show()
+        analyzeThread = Thread(target=self.AnalyzeThread())
+        analyzeThread.start()
+        # analyzeThread.join()
+
+    def AnalyzeThread(self):
+        path = self.a.saveDirectory + "/"
+        pub.sendMessage("update", number=1, msg="Reading Directory")
+        sleep(0)
+        self.a.read_directory(path)
+        pub.sendMessage("update", number=20, msg="Saving Boxplot")
+        sleep(0)
+        self.a.save_boxplot()
+        pub.sendMessage("update", number=40, msg="Saving Linechart")
+        sleep(0)
+        self.a.save_linechart()
+        pub.sendMessage("update", number=60, msg="Saving Statckchart")
+        self.a.save_stackchart()
+        sleep(0)
+        pub.sendMessage("update", number=80, msg="Saving Heatmap")
+        self.a.save_heatmap(path)
+        sleep(0)
+        pub.sendMessage("update", number=100, msg="END")
 
     def RefreshPreview(self):
         _, bitmap = self.d.getcamimage(camip=self.nowCamIP, size=(960, 540))

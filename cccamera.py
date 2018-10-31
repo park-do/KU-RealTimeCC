@@ -23,6 +23,7 @@ class CCCamera:
         self.timeStamp = ""
         self.camThread: Thread = None
         self.isEnd = False
+        self.isSaved = False
 
     def AddGrid(self):
         grid = detectgrid.detectgrid()
@@ -149,6 +150,7 @@ class CCCamera:
                 analyzerInst.add_row(analyze_list)
             analyzerInst.after_add_row()
             self.nowBitmap = imageutility.PIL2wx(gridImage)
+
             # imageCtrl.Bitmap = bitmap
             print(time.clock() - t0)
             sleeptime = term - (time.clock() - t0)
@@ -156,6 +158,9 @@ class CCCamera:
                 sleep(sleeptime)
 
             if self.isDetecting is True:
+                if self.isSaved is False:
+                    self.isSaved = True
+                    gridImage.save(analyzerInst.saveDirectory+"/cam"+str(self.camindex)+".png")
                 self.isReady = True
 
 

@@ -12,7 +12,18 @@ from threading import Lock
 from typing import List
 
 # 그래프 등에 쓰이는 색 리스트
-colorList: List[str] = ["#ff0000", "#ffff00", "#ff00ff", "#00ffff", "#00ff00", "#abcdef", "#fedcba", "#abefcd", "#cdbaef"]
+colorList: List[str] = ["#ff0000", "#0040ff",
+                        "#00ff00", "#ff8000",
+                        "#00ffff", "#ffff00",
+                        "#8000ff",
+                        "#ff9999", "#ffcc99",
+                        "#ffff99", "#99ff99",
+                        "#99ffff", "#9999ff",
+                        "#cc99ff", "#ff99e6",
+                        "#660000",
+                        "#666600", "#006600",
+                        "#006666", "#000066",
+                        "#660066"]
 
 class Analyzer:
     # df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
@@ -337,7 +348,7 @@ class Analyzer:
 
     '''리포트 저장'''
     def save_report(self):
-        report = []
+        txtlis = []
         df3 = self.df2.pivot_table(index='TIMEINDEX', columns='GRIDINDEX', aggfunc=np.mean)
         df3['SUM'] = df3.sum(axis=1)
         df3.columns = df3.columns.levels[1].tolist()
@@ -355,7 +366,7 @@ class Analyzer:
         01 한적 18-10-29 04:48:01
         02 혼잡 18-10-29 04:47:42
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         '''##########################가장 혼잡한 지역은? 그리고 비율은?##########################'''
         txt = ''
@@ -373,7 +384,7 @@ class Analyzer:
         01 번 구역에 0.12399232245681382 %
         02 번 구역에 0.10978886756238003 %
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         tmplis = []
         for i in df4.index[:-1]:
@@ -387,13 +398,13 @@ class Analyzer:
         가장 혼잡한 구역은 01 입니다.
         가장 한적한 구역은 11 입니다.
         '''
-        report.append(txt)
+        txtlis.append(txt)
 
         '''##########################평균 표준편차##########################'''
         txt = ''
         for i in tmplis:
             txt += i, "영역의 평균인원은", round(df3[i].mean(), 3), "표준편차는", round(df3[i].std(), 3) + '\n'
-        report.append(txt)
+        txtlis.append(txt)
         '''
         출력예제:
         01 영역의 평균인원은 2.675 표준편차는 0.503
@@ -435,5 +446,9 @@ class Analyzer:
         11 영역 → 02 영역 → 12 영역 → 02 영역 → 순으로 방문 하시는 게 좋습니다.
 
         '''
-        report.append(txt)
-        print(report)
+        txtlis.append(txt)
+        print(txtlis)
+
+        import report
+        r = report.Report(self.saveDirectory, txtlis)
+        r.make_html()

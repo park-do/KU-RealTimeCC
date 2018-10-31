@@ -125,14 +125,7 @@ class CCCamera:
                             rby *= ratio[1]
 
                         if checkingGrid.isInRect(((ltx + rbx) / 2, rby)):
-                            color = "red"
-                            if gridIndex == 1:
-                                color = "blue"
-                            if gridIndex == 2:
-                                color = "green"
-                            if gridIndex == 3:
-                                color = "yellow"
-                            draw.rectangle((ltx, lty, rbx, rby), outline=color)
+                            draw.rectangle((ltx, lty, rbx, rby), outline=checkingGrid.color)
                             camgrid = str(self.camindex)+""+str(gridIndex+1)
                             analyze_list.append(detection + (camgrid, self.timeStamp))
 

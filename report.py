@@ -12,6 +12,7 @@ class Report:
         stackchart = []
         boxplot = []
         heatmap = []
+        cam = []
 
         # 디렉토리 안에 차트 그림파일이 있는가?
         for fname in flis:
@@ -23,6 +24,8 @@ class Report:
                 boxplot.append(fname)
             if fname.find('heatmap') >= 0:
                 heatmap.append(fname)
+            if fname.find('cam') >= 0:
+                cam.append(fname)
 
         self.txt = '''
         <html>
@@ -37,6 +40,9 @@ class Report:
 
         # TODO: 사진 집어넣기
 
+        for fname in cam:
+            self.place_image(fname)
+        self.txt += '<br/>'
 
         # 히트맵
         for fname in heatmap:
@@ -89,6 +95,8 @@ class Report:
         </body>
         </html>
         '''
+
+        self.to_report()
 
     def place_img(self, filename):
         self.txt += '<img src="'

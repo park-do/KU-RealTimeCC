@@ -53,7 +53,8 @@ class FrameOne(wx.Frame):
         # self.nowCamIP = -1                            # 현재 처리중인 Cam의 IP
         self.nowCamIndex = 0                            # 현재 처리중인 Cam의 Index
         self.gridIndex = self.dotIndex = -1             # 그리드 이동용 변수들
-        self.previewThread: Thread = None                # 미리보기 스레드
+        self.gridColorIndex = 0                         # 그리드 색 변수
+        self.previewThread: Thread = None               # 미리보기 스레드
 
         title = "RealTimeCC"
 
@@ -203,6 +204,14 @@ class FrameOne(wx.Frame):
     def OnGridAddButton(self, mouseEvent: wx.MouseEvent):
         print("GridAddButton")
         self.cameraList[self.nowCamIndex].AddGrid()
+
+        colorIndex = 0
+        for ci in range(0, len(self.cameraList)):
+            colorIndex += 1         # 빈칸을 위한 스킵
+            for gi in range(0, len(self.cameraList[ci].gridList)):
+                self.cameraList[ci].gridList[gi].color = imageutility.colorList[colorIndex]
+                colorIndex += 1     # 다음 색
+
         # self.RefreshPreview()
 
     def OnCSVAnalyzeButton(self, e):

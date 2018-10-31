@@ -1,6 +1,6 @@
 from PIL import Image, ImageFont, ImageDraw, ImageEnhance
 import wx
-
+from typing import List
 
 def WxBitmapToPilImage( myBitmap ) :
     return WxImageToPilImage( WxBitmapToWxImage( myBitmap ) )

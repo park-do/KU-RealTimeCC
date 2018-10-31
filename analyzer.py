@@ -8,7 +8,11 @@ from datetime import datetime
 from dateutil.parser import parse
 import os
 from PIL import Image, ImageDraw
+from threading import Lock
+from typing import List
 
+# 그래프 등에 쓰이는 색 리스트
+colorList: List[str] = ["#ff0000", "#ffff00", "#ff00ff", "#00ffff", "#00ff00", "#abcdef", "#fedcba", "#abefcd", "#cdbaef"]
 
 class Analyzer:
     # df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
@@ -23,16 +27,18 @@ class Analyzer:
         self.saveDirectory = "../" + str(self.timename)
         self.csvcount = 0
         self.csvcut = 500
+        self.lock = Lock() #LOCK
 
     '''데이터 로우 추가'''
     def add_row(self, detection_list):
         # now = str(datetime.now())
-        for row in detection_list:
-            if row[0] == 'person':  # 사람만 추가함
-                row = list(row)  # tuple을 list로
-                # row.append(now)  # 현재 시간 추가 # PJK: 시간 추가를 gui처리부로 옮깁니다.
-                self.df.loc[len(self.df)] = row
-                # POSITION: (x,y)(w,h)
+        with self.lock:
+            for row in detection_list:
+                if row[0] == 'person':  # 사람만 추가함
+                    row = list(row)  # tuple을 list로
+                    # row.append(now)  # 현재 시간 추가 # PJK: 시간 추가를 gui처리부로 옮깁니다.
+                    self.df.loc[len(self.df)] = row
+                    # POSITION: (x,y)(w,h)
 
     '''row 길이 체크'''
     def after_add_row(self):

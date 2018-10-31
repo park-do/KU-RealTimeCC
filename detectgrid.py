@@ -6,7 +6,7 @@ import imageutility
 class detectgrid:
 
     def __init__(self):
-
+        self.color = "#ff0000"
         self.dotList = []
 
     '''
@@ -35,15 +35,15 @@ class detectgrid:
             if dot[1] == prePos[1]:
                 dot[1] = pos[1]
 
-    def drawGrid(self, image, color="red"):
+    def drawGrid(self, image):
         # image = imageutility.wx2PIL(image)
         draw = ImageDraw.Draw(image)
 
         # 그려주기
         for i in range(0, len(self.dotList)-1):
-            draw.line((self.dotList[i][0], self.dotList[i][1], self.dotList[i+1][0], self.dotList[i+1][1]), color, 2)
+            draw.line((self.dotList[i][0], self.dotList[i][1], self.dotList[i+1][0], self.dotList[i+1][1]), self.color, 2)
 
         # 닫아주기
-        draw.line((self.dotList[0][0], self.dotList[0][1], self.dotList[len(self.dotList)-1][0], self.dotList[len(self.dotList)-1][1]), color, 2)
+        draw.line((self.dotList[0][0], self.dotList[0][1], self.dotList[len(self.dotList)-1][0], self.dotList[len(self.dotList)-1][1]), self.color, 2)
 
         return image  # imageutility.PIL2wx(image)

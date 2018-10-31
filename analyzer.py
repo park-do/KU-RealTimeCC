@@ -12,7 +12,18 @@ from threading import Lock
 from typing import List
 
 # 그래프 등에 쓰이는 색 리스트
-colorList: List[str] = ["#ff0000", "#ffff00", "#ff00ff", "#00ffff", "#00ff00", "#abcdef", "#fedcba", "#abefcd", "#cdbaef"]
+colorList: List[str] = ["#ff0000", "#0040ff",
+                        "#00ff00", "#ff8000",
+                        "#00ffff", "#ffff00",
+                        "#8000ff",
+                        "#ff9999", "#ffcc99",
+                        "#ffff99", "#99ff99",
+                        "#99ffff", "#9999ff",
+                        "#cc99ff", "#ff99e6",
+                        "#660000",
+                        "#666600", "#006600",
+                        "#006666", "#000066",
+                        "#660066"]
 
 class Analyzer:
     # df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
@@ -336,7 +347,7 @@ class Analyzer:
                 dotList.append([pdf['X'].iloc[0] - pdf['W'].iloc[0] / 2, pdf['Y'].iloc[0] + pdf['H'].iloc[0] / 2])
                 # 라인 그리기
                 for k in range(0, len(dotList) - 1):
-                    draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]), 
+                    draw.line((dotList[k][0], dotList[k][1], dotList[k + 1][0], dotList[k + 1][1]),
                               colorList[color_idx], 2)
                 # 닫아주기
                 draw.line((dotList[0][0], dotList[0][1], dotList[len(dotList) - 1][0], dotList[len(dotList) - 1][1]),
@@ -448,3 +459,7 @@ class Analyzer:
 
         '''
         txtlis.append(txt)
+
+        import report
+        r = report.Report(self.saveDirectory, txtlis)
+        r.make_html()

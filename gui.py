@@ -118,6 +118,8 @@ class FrameOne(wx.Frame):
 
             self.cameraList.append(newCamera)
 
+            self.RefreshGridColor()
+
             button = wx.Button(self.startPanel, label="캠 " + str(len(self.cameraList)), pos=(10 + 60 * (len(self.cameraList)-1), 55), size=(60 , 40))
 
             def OnCamChange(event, index=len(self.cameraList)-1):
@@ -180,6 +182,8 @@ class FrameOne(wx.Frame):
 
 
     def OnLeftMouseButtonDown(self, mouseEvent : wx.MouseEvent):
+        if len(self.cameraList) <= 0:
+            return
         camera = self.cameraList[self.nowCamIndex]
         mousePos = mouseEvent.GetPosition()
         mousePos[0] -= 10
@@ -204,15 +208,15 @@ class FrameOne(wx.Frame):
     def OnGridAddButton(self, mouseEvent: wx.MouseEvent):
         print("GridAddButton")
         self.cameraList[self.nowCamIndex].AddGrid()
+        self.RefreshGridColor()
 
+    def RefreshGridColor(self):
         colorIndex = 0
         for ci in range(0, len(self.cameraList)):
-            colorIndex += 1         # 빈칸을 위한 스킵
+            # colorIndex += 1  # 빈칸을 위한 스킵
             for gi in range(0, len(self.cameraList[ci].gridList)):
-                self.cameraList[ci].gridList[gi].color = imageutility.colorList[colorIndex]
-                colorIndex += 1     # 다음 색
-
-        # self.RefreshPreview()
+                self.cameraList[ci].gridList[gi].color = analyzer.colorList[colorIndex]
+                colorIndex += 1  # 다음 색
 
     def OnCSVAnalyzeButton(self, e):
         print("CSVButton")
@@ -236,17 +240,20 @@ class FrameOne(wx.Frame):
         pub.sendMessage("update", number=1, msg="Reading Directory")
         sleep(0)
         self.a.read_directory(path)
-        pub.sendMessage("update", number=20, msg="Saving Boxplot")
+        pub.sendMessage("update", number=15, msg="Saving Boxplot")
         sleep(0)
         self.a.save_boxplot()
-        pub.sendMessage("update", number=40, msg="Saving Linechart")
+        pub.sendMessage("update", number=30, msg="Saving Linechart")
         sleep(0)
         self.a.save_linechart()
-        pub.sendMessage("update", number=60, msg="Saving Statckchart")
+        pub.sendMessage("update", number=45, msg="Saving Statckchart")
         self.a.save_stackchart()
         sleep(0)
-        pub.sendMessage("update", number=80, msg="Saving Heatmap")
+        pub.sendMessage("update", number=60, msg="Saving Heatmap")
         self.a.save_heatmap(path)
+        sleep(0)
+        pub.sendMessage("update", number=90, msg="Saving report")
+        self.a.save_report()
         sleep(0)
         pub.sendMessage("update", number=100, msg="END")
 

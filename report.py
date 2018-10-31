@@ -26,19 +26,45 @@ class Report:
                 heatmap.append(fname)
             if fname.find('cam') >= 0:
                 cam.append(fname)
+        # 스케쥴 박스 처리용
+        schtxt = self.txtlis[4].split('\n\n')
+        time_lis = []
+        sch_lis = []
+        for s in schtxt:
+            if s == '':
+                break
+            time_lis.append(s.split('\t')[0])
+            sch_lis.append(s.split('\t')[1])
 
-        self.txt = '''
+        self.txt += '''
         <!DOCTYPE html>
-        <html lang="en"> 
+        <html> 
         <head>
-        <meta charset="utf-8"/>
         '''
-        self.txt = '''
+        # 스크립트
+        self.txt += '''\n<script>
+                function changeSchedule(){
+                    var select = document.getElementById("schedule").value;
+                    switch (select) {'''
+        for i in range(len(sch_lis)):
+            self.txt += "case '" + str(i) + "':"
+            self.txt += 'document.getElementById("sch").innerHTML = "' + sch_lis[i].replace('\n', ' ') + '";\n break;\n'
+        self.txt += '''
+                    default: break;
+                    }
+                }</script>
+                '''
+        self.txt += '''
+        <style>
+            .center {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
         </head>
         <body>
         '''
-
-        # TODO: 사진 집어넣기
 
         for fname in cam:
             self.place_img(fname)
@@ -46,7 +72,7 @@ class Report:
 
         # 히트맵
         for fname in heatmap:
-            self.place_img(fname)
+            self.place_img(fname, '640px')
         self.txt += '<br/>'
 
         # 라인 차트
@@ -78,7 +104,6 @@ class Report:
         '''
 
         # 박스플롯
-        # TODO: 표준편차 넣기
         for fname in boxplot:
             self.place_img(fname)
         self.txt += '<br/>'
@@ -101,40 +126,18 @@ class Report:
         01 영역의 평균인원은 2.675 표준편차는 0.503
         02 영역의 평균인원은 2.388 표준편차는 0.915
         '''
-
-        # TODO: 셀렉트박스로 만들기
         # 스케쥴링
-        schtxt = self.txtlis[4].split('\n\n')
-        time_lis = []
-        sch_lis = []
-        for s in schtxt:
-            if s == '':
-                break
-            time_lis.append(s.split('\t')[0])
-            sch_lis.append(s.split('\t')[1])
-
-        # 스크립트
-        self.txt += '<script>'
-        '''
-        function changeSchedule(){
-            var select = document.getElementById("schedule");
-            switch(select){'''
-        for i in range(len(sch_lis)):
-            self.txt += 'case ' + str(i) +':'
-            self.txt += 'document.getElementById("sch").innerHTML = "' + sch_lis[i] + '"; break;'
-        self.txt +='''
-            }
-        }</script>
-        '''
+        self.txt += '<h1> 방문 스케줄링 </h1><p/>'
         # 셀렉트 박스 만들기
-        self.txt += '<select id ="schedule" onchange="changeSchedule()">'
+        self.txt += '\n<select id ="schedule" onchange="changeSchedule()">'
         sch_idx = 0
         for s in time_lis:
-            self.txt += '<option ="' + str(sch_idx) + '">'
+            self.txt += '<option value="' + str(sch_idx) + '">'
             self.txt += s
-            self.txt += '</option>'
+            self.txt += '</option>\n'
             sch_idx += 1
-        self.txt += '<div id="sch">'
+        self.txt += '</select>\n'
+        self.txt += '<div id="sch"> 방문 시간을 선택해주세요'
         self.txt += '</div>'
 
         self.txt += '''
@@ -143,13 +146,16 @@ class Report:
         '''
         self.to_report()
 
-    def place_img(self, filename):
+    def place_img(self, filename, width=False):
         self.txt += '<img src="'
         self.txt += self.directory + filename
-        self.txt += '"/>'
+        self.txt += '"'
+        if width:
+            self.txt += ' width="' + width + '"'
+        self.txt += '/>'
 
     def to_report(self):
-        file = open(self.directory + 'report.html', 'w')
+        file = open(self.directory + 'report.html', 'w',encoding='utf8')
         file.write(self.txt)
         file.close()
 

@@ -133,7 +133,7 @@ class Analyzer:
         tmpdf = df2.pivot_table(columns='TIMEINDEX', index='GRIDINDEX', aggfunc={'COUNT': 'mean'},
                                fill_value=0).unstack().to_frame().reset_index()
         tmpdf.rename(columns={0: 'COUNT'}, inplace=True)
-        self.df2 = df2.groupby(['TIMEINDEX', 'GRIDINDEX']).agg({'COUNT': 'mean'}).reset_index()
+        self.df2 = tmpdf.groupby(['TIMEINDEX', 'GRIDINDEX']).agg({'COUNT': 'mean'}).reset_index()
         print('read directory finished')
 
     '''라인차트 저장'''

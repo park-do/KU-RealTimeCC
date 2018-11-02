@@ -240,21 +240,28 @@ class FrameOne(wx.Frame):
         pub.sendMessage("update", number=1, msg="Reading Directory")
         sleep(0)
         self.a.read_directory(path)
-        pub.sendMessage("update", number=15, msg="Saving Boxplot")
-        sleep(0)
-        self.a.save_boxplot()
-        pub.sendMessage("update", number=30, msg="Saving Linechart")
+
+        pub.sendMessage("update", number=15, msg="Saving Linechart")
         sleep(0)
         self.a.save_linechart()
-        pub.sendMessage("update", number=45, msg="Saving Statckchart")
+
+        pub.sendMessage("update", number=45, msg="Saving Boxplot")
+        sleep(0)
+        self.a.save_boxplot()
+
+        pub.sendMessage("update", number=30, msg="Saving Statckchart")
+        sleep(0)
         self.a.save_stackchart()
-        sleep(0)
+
+
         pub.sendMessage("update", number=60, msg="Saving Heatmap")
+        sleep(0)
         self.a.save_heatmap(path)
-        sleep(0)
+
         pub.sendMessage("update", number=90, msg="Saving report")
-        self.a.save_report()
         sleep(0)
+        self.a.save_report()
+
         pub.sendMessage("update", number=100, msg="END")
 
     def RefreshPreview(self):

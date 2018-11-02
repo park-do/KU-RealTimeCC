@@ -68,12 +68,10 @@ class Report:
         <h1>분석 리포트</h1>
         '''
 
-        for fname in cam:
-            self.place_img(fname)
-        self.txt += '<br/>'
-
         self.txt += '<h2> 설정된 영역 </h2><p/>'
-        # TODO: 캠 사진 필요
+        for fname in cam:
+            self.place_img(fname, '640px')
+        self.txt += '<br/>'
 
         self.txt += '<h2> 히트맵 </h2><p/>'
         # 히트맵

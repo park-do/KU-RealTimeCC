@@ -226,7 +226,7 @@ class Analyzer:
                     labels.append(str(i) + ' camera rest')
 
         y = np.vstack(stacked_list)
-        ax1.stackplot(x, y, labels=labels)
+        ax1.stackplot(x, y, labels=labels, colors=colorList)
         ax1.legend(loc='upper left')
         ax1.set_ylabel('number of person')
         fig.tight_layout()

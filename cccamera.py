@@ -146,7 +146,15 @@ class CCCamera:
 
             if self.isDetecting is True:
                 if self.isSaved is False:
+                    from PIL import ImageFont
                     self.isSaved = True
+                    gridindex = 0
+                    fnt = ImageFont.truetype(font="malgun.ttf", size=40)
+                    for checkingGrid in self.gridList:
+                        textx = (checkingGrid.dotList[0][0] + checkingGrid.dotList[2][0]) / 2
+                        texty = (checkingGrid.dotList[0][1] + checkingGrid.dotList[2][1]) / 2
+                        draw.text((textx, texty), str(self.camindex)+str(gridindex+1), (255, 255, 255), font=fnt)
+                        gridindex += 1
                     gridImage.save(analyzerInst.saveDirectory+"/cam"+str(self.camindex)+".png")
                 self.isReady = True
 

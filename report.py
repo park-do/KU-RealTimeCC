@@ -68,7 +68,10 @@ class Report:
         <h1>분석 리포트</h1>
         '''
 
+
+
         self.txt += '<h2> 설정된 영역 </h2><p/>'
+        # 캠사진
         for fname in cam:
             self.place_img(fname, '640px')
         self.txt += '<br/>'

@@ -367,7 +367,7 @@ class DarknetDetect:
     # 특정 ip, 파일 경로에서 프레임을 읽어와서 detect한 후 결과 리턴
     def framedetect(self, camip=0, drawboxes=True, saveimage=False, converttowximage=True, size=(0, 0), newcap=True):
         from PIL import Image, ImageFont, ImageDraw, ImageEnhance
-        ret, frame = self.getcamimage(camip, converttowxbitmap=False)
+        ret, frame = self.getcamimage(camip, converttowxbitmap=False, newcap=newcap)
         if not ret:
             return None, None
 

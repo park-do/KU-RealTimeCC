@@ -37,7 +37,7 @@ class Analyzer:
         self.timename = self.timename[:self.timename.find('.')].replace(":", "").replace("-", "")
         self.saveDirectory = "../" + str(self.timename)
         self.csvcount = 0
-        self.csvcut = 500
+        self.csvcut = 30000
         self.lock = Lock() #LOCK
 
     '''데이터 로우 추가'''
@@ -67,8 +67,8 @@ class Analyzer:
                 row = (camera.camindex, tuple(camera.camsize), str(camera.camindex) + str(gridIndex+1),
                        (((dl[0][0]+dl[2][0])/2 * xModify,
                          (dl[0][1]+dl[2][1])/2 * yModify,
-                         dl[2][0]-dl[0][0] * xModify,
-                         dl[2][1]-dl[0][1] * yModify)))
+                         (dl[2][0]-dl[0][0]) * xModify,
+                         (dl[2][1]-dl[0][1]) * yModify)))
                 griddf.loc[len(griddf)] = list(row)
 
 

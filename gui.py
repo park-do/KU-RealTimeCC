@@ -172,12 +172,14 @@ class FrameOne(wx.Frame):
             camera.StopCam()
         self.previewEnd = True
 
+        self.a.to_csv()
+
         # 모든 스레드가 멈춘 후에 분석 시작
         self.previewThread.join()
         for camera in self.cameraList:
             camera.camThread.join()
 
-        self.a.to_csv()
+        # self.a.to_csv()
         self.AnalyzeProcess()
 
 
@@ -288,6 +290,7 @@ class FrameOne(wx.Frame):
     def PreviewThreading(self, imageCtrl: wx.Bitmap):
         # 루프
         self.previewEnd = False
+
         while True:
             nowCam = self.cameraList[self.nowCamIndex]
             if nowCam.nowBitmap is not None:
@@ -305,8 +308,10 @@ class FrameOne(wx.Frame):
                 for cam in self.cameraList:
                     cam.isReady = False
                     cam.timeStamp = timeStamp
+                sleep(0.5)
+            else:
+                sleep(0.001)
 
-            sleep(0.001)
             if self.previewEnd:
                 break
         # self.a.df.to_csv('../test.csv')

@@ -65,12 +65,13 @@ class CCCamera:
             now = str(datetime.now())
             detection_list = []
             analyze_list = []
-            term = 0
+            term = 0.2
 
             t0 = time.clock()
             if self.isDetecting is True:
                 while self.isReady is True:
-                    sleep(0)
+                    sleep(0.01)
+                    _, bitmap = detector.getcamimage(self.camip, size=size)
                 t0 = time.clock()
                 detection_list, bitmap = detector.framedetect(camip=self.camip, size=size, drawboxes=False)
             else:
@@ -126,13 +127,13 @@ class CCCamera:
 
                         if checkingGrid.isInRect(((ltx + rbx) / 2, rby)):
                             draw.rectangle((ltx, lty, rbx, rby), outline=checkingGrid.color)
-                            camgrid = str(self.camindex)+""+str(gridIndex+1).zfill(3)
+                            camgrid = str(self.camindex)+""+str(gridIndex+1).zfill(2)
                             analyze_list.append(detection + (camgrid, self.timeStamp))
 
                         gridIndex += 1
 
                 if len(analyze_list) <= 0:
-                    camgrid = str(self.camindex) + "0"
+                    camgrid = str(self.camindex) + "00"
                     analyze_list.append(detection + (camgrid, self.timeStamp))
                 analyzerInst.add_row(analyze_list)
             analyzerInst.after_add_row()
@@ -153,7 +154,7 @@ class CCCamera:
                     for checkingGrid in self.gridList:
                         textx = (checkingGrid.dotList[0][0] + checkingGrid.dotList[2][0]) / 2
                         texty = (checkingGrid.dotList[0][1] + checkingGrid.dotList[2][1]) / 2
-                        draw.text((textx, texty), str(self.camindex)+str(gridindex+1).zfill(3), (255, 255, 255), font=fnt)
+                        draw.text((textx, texty), str(self.camindex)+str(gridindex+1).zfill(2), (255, 255, 255), font=fnt)
                         gridindex += 1
                     gridImage.save(analyzerInst.saveDirectory+"/cam"+str(self.camindex)+".png")
                 self.isReady = True

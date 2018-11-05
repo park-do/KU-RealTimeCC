@@ -15,15 +15,26 @@ from typing import List
 colorList: List[str] = ["#ff0000", "#0040ff",
                         "#00ff00", "#ff8000",
                         "#00ffff", "#ffff00",
-                        "#8000ff",
+                        "#8000ff", "#660000",
                         "#ff9999", "#ffcc99",
                         "#ffff99", "#99ff99",
                         "#99ffff", "#9999ff",
                         "#cc99ff", "#ff99e6",
-                        "#660000",
                         "#666600", "#006600",
                         "#006666", "#000066",
-                        "#660066"]
+                        "#660066", "#ffcecc",
+                        '#ba2644', '#4c072c',
+                        '#00bcb5', '#b6c399',
+                        "#a6dfeb", "#6baac4",
+                        "#16c6f4", "#b7bd1c",
+                        "#fd9040", "#0e2f44",
+                        "#800000", "#333333",
+                        "#bada55", "#ffa500",
+                        "#dc0073", "#f5b700",
+                        "#89fc00", "#04e762", # 40
+                        "#177e89", "#084c61",
+                        "#db3a34", "#ffc857"
+                        ]
 
 class Analyzer:
     # df = pd.DataFrame()  # 데이터를 수집해서 저장하는 프레임
@@ -172,8 +183,8 @@ class Analyzer:
         # y = df2[df2['GRIDINDEX']=='00']['COUNT']
         y = self.df2.groupby('TIMEINDEX').agg({'COUNT': 'sum'})['COUNT']
         ax2.bar(x, y, alpha=0.1, label='total')
-        ax1.legend(loc='upper left')
-        ax2.legend(loc='upper right')
+        ax1.legend(loc='upper left',framealpha=0.3)
+        ax2.legend(loc='upper right',framealpha=0.3)
 
         fig.tight_layout()
         plt.savefig(self.saveDirectory + '/linechart.png')
@@ -229,7 +240,7 @@ class Analyzer:
 
         y = np.vstack(stacked_list)
         ax1.stackplot(x, y, labels=labels, colors=colorList)
-        ax1.legend(loc='upper left')
+        ax1.legend(loc='upper left', framealpha=0.3)
         ax1.set_ylabel('number of person')
         fig.tight_layout()
         plt.savefig(self.saveDirectory + '/stackchart.png')
@@ -252,6 +263,7 @@ class Analyzer:
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
         sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION")
+        plt.legend(framealpha=0.3)
         plt.savefig(self.saveDirectory + '/boxplot.png')
         print('save boxplot finished')
 

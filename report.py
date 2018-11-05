@@ -74,13 +74,13 @@ class Report:
         self.txt += '<h2> 설정된 영역 </h2><p/>'
         # 캠사진
         for fname in cam:
-            self.place_img(fname, '640px')
+            self.place_img(fname, '600px')
         self.txt += '<br/>'
 
         self.txt += '<h2> 히트맵 </h2><p/>'
         # 히트맵
         for fname in heatmap:
-            self.place_img(fname, '640px')
+            self.place_img(fname, '600px')
         self.txt += '<br/>'
         self.txt += '<h3> 밝을 수록 사람이 머문 시간이 깁니다.</h3><br/>'
 

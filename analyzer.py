@@ -127,7 +127,7 @@ class Analyzer:
         # 최고시간 최저시간의 차를 계산한 후 10개 구간으로 나눔
         maxt = round(parse(df2.TIME.unique().max()).timestamp())
         mint = round(parse(df2.TIME.unique().min()).timestamp())
-        td = (maxt - mint) / 20  # 구간 개수 설정
+        td = (maxt - mint) / 30  # ====================================================================== 구간 개수 설정
 
         # 타임 간격에 맞는 날짜 포맷 설정
         if td < 60:  # 60초보다 시간 간격이 짧으면 초 단위도 표시함
@@ -137,8 +137,8 @@ class Analyzer:
 
         lis = []
         for t in df2.TIME:
-            tmp = int((parse(t).timestamp() - mint) / td)  # 20개 구간 중 몇 번째 구간이낙?
-            if tmp >= 20: tmp = 19  # 20을 넘어가면 그냥 19로
+            tmp = int((parse(t).timestamp() - mint) / td)  # 30개 구간 중 몇 번째 구간이낙?
+            if tmp >= 30: tmp = 29  # 30을 넘어가면 그냥 29로
             tmpt = mint + tmp * td
             lis.append(datetime.fromtimestamp(tmpt).strftime(strfmt))
         df2['TIMEINDEX'] = lis
@@ -152,7 +152,7 @@ class Analyzer:
     def save_linechart(self):
         # plt 설정
         fig, ax1 = plt.subplots()
-        fig.set_size_inches(11, 10)
+        fig.set_size_inches(14, 10)
         ax1.set_title('Time series analysis')
 
         # x축 설정
@@ -195,7 +195,7 @@ class Analyzer:
 
         # plt 설정
         fig, ax1 = plt.subplots()
-        fig.set_size_inches(11, 10)
+        fig.set_size_inches(14, 10)
         ax1.set_title('Cumulative sum')
 
         # x축 설정
@@ -262,7 +262,7 @@ class Analyzer:
         ax1.set_title('Box plot')
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
-        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION")
+        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION",width =2.5)
         plt.legend(framealpha=0., loc='upper left', ncol=5)
         plt.savefig(self.saveDirectory + '/boxplot.png')
         print('save boxplot finished')
@@ -457,15 +457,18 @@ class Analyzer:
 
         gridlen = len(df5.columns) - 1  # 영역이 몇 개 있는 지
 
-        for r in range(len(df5) - gridlen):  # 로우 수 만큼 반복
-            tmpdf = df5.iloc[r:r + gridlen, 0:-1]
+        for r in range(len(df5)):  # 로우 수 만큼 반복
+            tmpdf = df5.iloc[r:, 0:-1]
             txt += str(tmpdf.index[0]) + "\t시간에 방문시\n"
             reslis = []
             for i in range(gridlen):
-                tmp = tmpdf.iloc[i] == tmpdf.iloc[i].min()  # i 번째 행에서 최소값
-                minc = tmpdf.iloc[i][tmp].index[0]  # 최소 컬럼 저장
-                tmpdf.loc[:, minc] = 1  # 방문한 컬럼은 1로 최대화 해버림
-                reslis.append(minc)
+                try:
+                    tmp = tmpdf.iloc[i] == tmpdf.iloc[i].min()  # i 번째 행에서 최소값
+                    minc = tmpdf.iloc[i][tmp].index[0]  # 최소 컬럼 저장
+                    tmpdf.loc[:, minc] = 1  # 방문한 컬럼은 1로 최대화 해버림
+                    reslis.append(minc)
+                except:
+                    break
             for i in reslis:
                 txt += str(i) + "영역 → "
             txt += " 순으로 방문 하시는 게 좋습니다.\n\n"

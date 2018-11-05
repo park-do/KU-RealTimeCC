@@ -335,6 +335,11 @@ class DarknetDetect:
 
         return self.cap[camip]
 
+    def releasecam(self, camip):
+        if camip in self.cap:
+            self.cap[camip].release()
+            del self.cap[camip]
+
     # 캠의 가로세로 크기 리턴
     def getcamsize(self, camip):
         self.initcam(camip)

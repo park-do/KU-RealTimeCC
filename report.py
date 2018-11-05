@@ -168,7 +168,7 @@ class Report:
 
     def place_img(self, filename, width=False):
         self.txt += '<img src="'
-        self.txt += self.directory + filename
+        self.txt += filename
         self.txt += '"'
         if width:
             self.txt += ' width="' + width + '"'

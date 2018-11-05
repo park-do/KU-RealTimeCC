@@ -126,7 +126,7 @@ class CCCamera:
 
                         if checkingGrid.isInRect(((ltx + rbx) / 2, rby)):
                             draw.rectangle((ltx, lty, rbx, rby), outline=checkingGrid.color)
-                            camgrid = str(self.camindex)+""+str(gridIndex+1)
+                            camgrid = str(self.camindex)+""+str(gridIndex+1).zfill(3)
                             analyze_list.append(detection + (camgrid, self.timeStamp))
 
                         gridIndex += 1
@@ -153,11 +153,13 @@ class CCCamera:
                     for checkingGrid in self.gridList:
                         textx = (checkingGrid.dotList[0][0] + checkingGrid.dotList[2][0]) / 2
                         texty = (checkingGrid.dotList[0][1] + checkingGrid.dotList[2][1]) / 2
-                        draw.text((textx, texty), str(self.camindex)+str(gridindex+1), (255, 255, 255), font=fnt)
+                        draw.text((textx, texty), str(self.camindex)+str(gridindex+1).zfill(3), (255, 255, 255), font=fnt)
                         gridindex += 1
                     gridImage.save(analyzerInst.saveDirectory+"/cam"+str(self.camindex)+".png")
                 self.isReady = True
 
+        # Release the cam
+        detector.releasecam(self.camip)
 
 
 

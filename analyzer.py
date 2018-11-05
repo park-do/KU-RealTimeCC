@@ -95,6 +95,7 @@ class Analyzer:
         i = 0
         for name in csvlis:
             tmpdf = pd.read_csv(directory + name, engine='python', index_col=0, dtype={'GRIDINDEX': str})
+            tmpdf['GRIDINDEX'] = tmpdf.GRIDINDEX.str.zfill(3) # 그리드 인덱스를 000 포맷으로 바꿈
             if i == 0:
                 tmpdf = tmpdf.pivot_table(columns='TIME', index='GRIDINDEX', aggfunc={'OBJECT': 'count'},
                                           fill_value=0).unstack().to_frame().reset_index()
@@ -144,7 +145,7 @@ class Analyzer:
         ax1.set_title('Time series analysis')
 
         # x축 설정
-        tmpdf = self.df2[self.df2['GRIDINDEX'] == '00']
+        tmpdf = self.df2[self.df2['GRIDINDEX'] == '000']
         y = tmpdf['COUNT']
 
         x = np.arange(y.shape[0])
@@ -158,7 +159,8 @@ class Analyzer:
         ax1.set_ylabel('number of person in each section')
         color_idx = 0
         for i in self.df2.GRIDINDEX.unique():
-            if i[-1:] == '0': continue
+            if i[1:] == '00':
+                continue
             y = self.df2[self.df2['GRIDINDEX'] == i]['COUNT']
             ax1.plot(x, y, alpha=1, label='section ' + i, c=colorList[color_idx])
             color_idx += 1
@@ -186,7 +188,7 @@ class Analyzer:
         ax1.set_title('Cumulative sum')
 
         # x축 설정
-        tmpdf = self.df2[self.df2['GRIDINDEX'] == '00']
+        tmpdf = self.df2[self.df2['GRIDINDEX'] == '000']
         y = tmpdf['COUNT']
 
         x = np.arange(y.shape[0])
@@ -203,7 +205,7 @@ class Analyzer:
         rest_lis = []
         grid_lis = []
         for s in self.df2.GRIDINDEX.unique():
-            if s[1:] == '0':
+            if s[1:] == '00':
                 rest_lis.append(s)
             else:
                 grid_lis.append(s)
@@ -222,7 +224,7 @@ class Analyzer:
             for i in self.df2.GRIDINDEX.unique():
                 cumsum = np.cumsum(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 누계를 구함
                 stacked_list.append(cumsum)  # 리스트로 만들어 스택드리스트에 저장
-                if i[-1:] != '0':
+                if i[1:] != '00':
                     labels.append(str(i) + ' camera rest')
 
         y = np.vstack(stacked_list)
@@ -236,8 +238,8 @@ class Analyzer:
 
     '''박스 플롯 저장'''
     def save_boxplot(self):
-        tmpdf1 = self.df2[self.df2['GRIDINDEX'].str[-1:] == '0']  # 나머지 영역
-        tmpdf2 = self.df2[self.df2['GRIDINDEX'].str[-1:] != '0']  # 그리드 영역
+        tmpdf1 = self.df2[self.df2['GRIDINDEX'].str[1:] == '00']  # 나머지 영역
+        tmpdf2 = self.df2[self.df2['GRIDINDEX'].str[1:] != '00']  # 그리드 영역
 
         tmpdf1.rename(columns={'GRIDINDEX': 'CAMERA'}, inplace=True)
         tmpdf2.rename(columns={'GRIDINDEX': 'SECTION'}, inplace=True)
@@ -406,7 +408,7 @@ class Analyzer:
 
         tmplis = []
         for i in df4.index[:-1]:
-            if i[-1:] != '0':
+            if i[1:] != '00':
                 tmplis.append(i)
         txt = ''
         txt += "가장 혼잡한 구역은 " + df4[df4.COUNT == df4[df4.index.isin(tmplis)].max().COUNT].index[0] + "입니다.\n"
@@ -438,7 +440,7 @@ class Analyzer:
         df5.rename(columns={'': 'SUM'}, inplace=True)
 
         for i in df5.columns[:-1]:
-            if i[-1:] == '0':
+            if i[1:] == '00':
                 df5.drop(columns=i, inplace=True)
 
         gridlen = len(df5.columns) - 1  # 영역이 몇 개 있는 지

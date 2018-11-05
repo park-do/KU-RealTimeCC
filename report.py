@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 class Report:
     def __init__(self, directory, txtlis):
@@ -177,7 +178,7 @@ class Report:
         file = open(self.directory + 'report.html', 'w',encoding='utf8')
         file.write(self.txt)
         file.close()
-
+        sleep(2) # 파일 열기까지 시간 걸림
         os.startfile(self.directory + 'report.html')
 
 

@@ -139,7 +139,7 @@ class CCCamera:
             self.nowBitmap = imageutility.PIL2wx(gridImage)
 
             # imageCtrl.Bitmap = bitmap
-            print(time.clock() - t0)
+            # print(time.clock() - t0)
             sleeptime = term - (time.clock() - t0)
             if sleeptime >= 0:
                 sleep(sleeptime)

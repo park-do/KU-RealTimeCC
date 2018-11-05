@@ -152,7 +152,7 @@ class Analyzer:
     def save_linechart(self):
         # plt 설정
         fig, ax1 = plt.subplots()
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(11, 10)
         ax1.set_title('Time series analysis')
 
         # x축 설정
@@ -183,8 +183,8 @@ class Analyzer:
         # y = df2[df2['GRIDINDEX']=='00']['COUNT']
         y = self.df2.groupby('TIMEINDEX').agg({'COUNT': 'sum'})['COUNT']
         ax2.bar(x, y, alpha=0.1, label='total')
-        ax1.legend(loc='upper left',framealpha=0.3)
-        ax2.legend(loc='upper right',framealpha=0.3)
+        ax1.legend(loc='upper left',framealpha=0.3, ncol=5)
+        ax2.legend(loc='upper right',framealpha=0.3, ncol=5)
 
         fig.tight_layout()
         plt.savefig(self.saveDirectory + '/linechart.png')
@@ -195,7 +195,7 @@ class Analyzer:
 
         # plt 설정
         fig, ax1 = plt.subplots()
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(11, 10)
         ax1.set_title('Cumulative sum')
 
         # x축 설정
@@ -240,7 +240,7 @@ class Analyzer:
 
         y = np.vstack(stacked_list)
         ax1.stackplot(x, y, labels=labels, colors=colorList)
-        ax1.legend(loc='upper left', framealpha=0.3)
+        ax1.legend(loc='upper left', framealpha=0.3, ncol=5)
         ax1.set_ylabel('number of person')
         fig.tight_layout()
         plt.savefig(self.saveDirectory + '/stackchart.png')
@@ -256,14 +256,14 @@ class Analyzer:
         tmpdf2.rename(columns={'GRIDINDEX': 'SECTION'}, inplace=True)
 
         fig = plt.figure()
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(18, 10)
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212)
         ax1.set_title('Box plot')
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
         sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION")
-        plt.legend(framealpha=0.3)
+        plt.legend(framealpha=0., loc='upper left', ncol=5)
         plt.savefig(self.saveDirectory + '/boxplot.png')
         print('save boxplot finished')
 

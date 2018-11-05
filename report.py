@@ -114,7 +114,7 @@ class Report:
         # 스택 차트
         self.txt += '<h2> 누적 라인차트 </h2><p/>'
         for fname in stackchart:
-            self.place_img(fname)
+            self.place_img(fname, '940px')
         self.txt += '<br/>'
         self.txt += '<h3> 그리드 영역과 나머지 영역의 인원차이를 볼 수 있습니다. </h3><br/>'
         stacklis = self.txtlis[1].split('\n')
@@ -147,6 +147,12 @@ class Report:
         '''
         # 스케쥴링
         self.txt += '<h2> 방문 스케줄링 </h2><p/>'
+
+        # 캠사진
+        for fname in cam:
+            self.place_img(fname, '600px')
+        self.txt += '<br/>'
+
         # 셀렉트 박스 만들기
         self.txt += '\n<select id ="schedule" onchange="changeSchedule()">'
         sch_idx = 0

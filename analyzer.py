@@ -191,7 +191,7 @@ class Analyzer:
         print('save linechart finished')
 
     '''스택차트를 저장하는 함수'''
-    def save_stackchart(self,param=0):
+    def save_stackchart(self, param=0):
 
         # plt 설정
         fig, ax1 = plt.subplots()
@@ -232,18 +232,16 @@ class Analyzer:
                 stacked_list.append(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 리스트로 만들어 스택드리스트에 저장
                 labels.append(str(i) + ' camera rest')
         else:
-            for i in self.df2.GRIDINDEX.unique():
-                cumsum = np.cumsum(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 누계를 구함
-                stacked_list.append(cumsum)  # 리스트로 만들어 스택드리스트에 저장
-                if i[1:] != '00':
-                    labels.append(str(i) + ' camera rest')
+            for i in grid_lis:
+                stacked_list.append(self.df2[self.df2['GRIDINDEX'] == i]['COUNT'].tolist())  # 리스트로 만들어 스택드리스트에 저장
+                labels.append('section ' + str(i))
 
         y = np.vstack(stacked_list)
         ax1.stackplot(x, y, labels=labels, colors=colorList)
         ax1.legend(loc='upper left', framealpha=0.3, ncol=5)
         ax1.set_ylabel('number of person')
         fig.tight_layout()
-        plt.savefig(self.saveDirectory + '/stackchart.png')
+        plt.savefig(self.saveDirectory + '/stackchart'+str(param)+'.png')
         ax1.remove()
         print('save stackchart finished')
 
@@ -256,20 +254,21 @@ class Analyzer:
         tmpdf2.rename(columns={'GRIDINDEX': 'SECTION'}, inplace=True)
 
         fig = plt.figure()
-        fig.set_size_inches(18, 10)
+        fig.set_size_inches(19, 10)
         ax1 = fig.add_subplot(211)
         ax2 = fig.add_subplot(212)
         ax1.set_title('Box plot')
 
         sns.boxplot(x='CAMERA', y='COUNT', data=tmpdf1, ax=ax1, hue="CAMERA")
-        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION",width =2.5)
+        sns.boxplot(x="SECTION", y="COUNT", data=tmpdf2, ax=ax2, palette=colorList, hue="SECTION",width =3)
         plt.legend(framealpha=0., loc='upper left', ncol=5)
+        plt.tight_layout()
         plt.savefig(self.saveDirectory + '/boxplot.png')
         print('save boxplot finished')
 
     def save_heatmap(self,directory):
         flis = os.listdir(directory)
-        griddf = pd.read_csv(directory + 'grid.csv', engine='python', index_col=0)
+        griddf = pd.read_csv(directory + 'grid.csv', engine='python', index_col=0, dtype={'GRIDINDEX': str})
 
         csvlis = [s for s in flis if s.find('.csv') > 0]  # csv 중
         csvlis = [s for s in csvlis if s.find('grid') < 0]  # 그리드가 아닌거
@@ -470,7 +469,7 @@ class Analyzer:
                 except:
                     break
             for i in reslis:
-                txt += str(i) + "영역 → "
+                txt += '<b>' + str(i) + "</b> 영역 → "
             txt += " 순으로 방문 하시는 게 좋습니다.\n\n"
         '''
         출력예제:

@@ -255,6 +255,10 @@ class FrameOne(wx.Frame):
         sleep(0)
         self.a.save_stackchart()
 
+        pub.sendMessage("update", number=30, msg="Saving Statckchart")
+        sleep(0)
+        self.a.save_stackchart(param=1)
+
 
         pub.sendMessage("update", number=60, msg="Saving Heatmap")
         sleep(0)
